@@ -1,14 +1,32 @@
 #ifndef  ANAS_MATH_HPP
 #define  ANAS_MATH_HPP
 #include <cmath>
-#include<vector>
-#include<functional>
+#include <vector>
+#include <functional>
 #include <random>
 #include <complex>
 #include <algorithm>
+#include <string>
 namespace ans
 {
 
+
+
+
+
+
+
+
+    inline unsigned int count_character(const std::string &text, char character)
+    {
+        unsigned int count = 0;
+        for (size_t i = 0; i < text.length(); i++)
+        {
+            if (text[i] == character)
+                count++;
+        }
+        return count;
+    }
 
 
 
@@ -21,6 +39,9 @@ constexpr long double PI = 3.14159265358979323846L;
 constexpr long double EPSI = 1e-18L;
 
 }
+
+
+
 
 
 inline int get_random_number(int min, int max) 
