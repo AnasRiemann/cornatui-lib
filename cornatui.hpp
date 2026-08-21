@@ -2,18 +2,32 @@
 #ifndef CORNATUI
 #define CORNATUI
 
+#include <cmath>
+#include <vector>
+#include <functional>
+#include <random>
+#include <complex>
+#include <algorithm>
+#include <string>
 #include <iostream>
 #include <sstream>
-#include <string>
 #include <iomanip>
 #include <chrono>
 #include <thread>
-#include <vector>
-#include <random>
-#include <algorithm>
 #include <atomic>
 #include <cstdlib>
 #include <cstring>
+#include <cctype>
+
+
+
+/*
+
+#define CORNATUI_DISABLE_WIN32
+#define CORNATUI_DISABLE_RANG_DOT_HPP
+
+*/
+
 
 #if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
 
@@ -76,47 +90,56 @@ namespace tui
         }
     }
 
-
     namespace str
     {
 
         inline std::string ignore_character(const std::string &input, const char character);
         inline std::string ignore_spaces(const std::string &input);
         inline std::string get_ascii_only(const std::string &input);
-
-
+        inline std::string validate_box_content(const std::string &input);
+        inline std::string lowercase(const std::string &text);
+        inline std::string uppercase(const std::string &text);
+        inline std::string reverse(const std::string &text);
+        inline std::string ltrim(const std::string &text);
+        inline std::string rtrim(const std::string &text);
+        inline std::string trim(const std::string &text);
 
         inline std::string translate(const std::string &content, const size_t x, const size_t y, Method translation_method = Method::padding);
-        inline std::string br(const size_t numberOfLines = 1 , Method translation_method = Method::padding);
-        inline std::string space(const size_t width , Method translation_method =  Method::padding );
-
-
+        inline std::string br(const size_t numberOfLines = 1, Method translation_method = Method::padding);
+        inline std::string space(const size_t width, Method translation_method = Method::padding);
 
         inline std::string fg_color(const unsigned int r, const unsigned int g, const unsigned int b);
         inline std::string bg_color(const unsigned int r, const unsigned int g, const unsigned int b);
+
+        inline std::string fg_color(const ans::IntRGB255 &colorValue);
+        inline std::string bg_color(const ans::IntRGB255 &colorValue);
+
         inline std::string fg_color(const unsigned int color);
-        inline std::string bg_color(const unsigned int color); 
+        inline std::string bg_color(const unsigned int color);
+
         inline std::string cls(Screen mode = Screen::full);
         inline std::string reset();
 
-
-
-    
         inline std::string hr(const std::size_t width = 80, const char style = '-');
         inline std::string hr(const size_t width, const std::string &style, const size_t numberOfLines = 1);
+        inline std::string line(const std::size_t width, const char style);
+        inline std::string line(const size_t width, const std::string &style);
 
-        inline std::string border(const std::string &abc, Border style = Border::single);
-    
+        inline std::string box(const std::string &abc, Border style = Border::single, const size_t padding = 0);
+        inline std::string box(const std::string &abc, Border style, const ans::IntRGB255 &textColor, const ans::IntRGB255 &bgColor, const ans::IntRGB255 &borderColor, const size_t padding);
+
+        inline std::string table(const std::vector<std::string> &text, Border style, const ans::IntRGB255 &textColor, const ans::IntRGB255 &bgColor, const ans::IntRGB255 &borderColor);
+
         inline std::string ordered_list(const std::vector<std::string> &Element);
         inline std::string unordered_list(const std::vector<std::string> &Element);
-        inline std::string create_page(const std::string &header, const std::vector<std::string> &Element);
+        inline std::string ordered_menu(const std::string &header, const std::vector<std::string> &Element);
 
         inline std::string unordered_list(const std::vector<std::vector<std::string>> &Element);
         inline std::string ordered_list(const std::vector<std::vector<std::string>> &Element);
-        inline std::string create_page(const std::string &header, const std::vector<std::vector<std::string>> &Element);
+        inline std::string ordered_menu(const std::string &header, const std::vector<std::vector<std::string>> &Element);
 
         inline std::string edit_precision(long double number, int precision1, int precision2);
-       
+
     }
 
     namespace str
@@ -125,6 +148,7 @@ namespace tui
         inline std::string ignore_character(const std::string &input, const char character)
         {
             std::string result;
+
             for (size_t i = 0; i < input.length(); i++)
             {
                 if (input[i] != character)
@@ -137,8 +161,6 @@ namespace tui
 
         inline std::string ignore_spaces(const std::string &input) { return ignore_character(input, ' '); }
 
-
-        
         inline std::string get_ascii_only(const std::string &input)
         {
             std::string filtered;
@@ -150,6 +172,72 @@ namespace tui
             return filtered;
         }
 
+        inline std::string validate_box_content(const std::string &input)
+        {
+            std::string filtered;
+            filtered.reserve(input.size());
+
+            for (size_t i = 0; i < input.length(); i++)
+            {
+                unsigned char c = static_cast<unsigned char>(input.at(i));
+
+                if (c > 31 && c < 128)
+                {
+                    filtered.push_back(static_cast<char>(c));
+                }
+            }
+            return trim(filtered);
+        }
+
+        inline std::string lowercase(const std::string &text)
+        {
+            std::string result = text;
+            std::transform(result.begin(), result.end(), result.begin(),
+                           [](unsigned char c)
+                           { return std::tolower(c); });
+            return result;
+        }
+
+        inline std::string uppercase(const std::string &text)
+        {
+            std::string result = text;
+            std::transform(result.begin(), result.end(), result.begin(),
+                           [](unsigned char c)
+                           { return std::toupper(c); });
+            return result;
+        }
+
+        inline std::string reverse(const std::string &text)
+        {
+            std::string result = text;
+            std::reverse(result.begin(), result.end());
+            return result;
+        }
+
+        inline std::string ltrim(const std::string &text)
+        {
+            std::string result = text;
+            result.erase(result.begin(), std::find_if(result.begin(), result.end(), [](unsigned char ch)
+                                                      { return !std::isspace(ch); }));
+            return result;
+        }
+
+        inline std::string rtrim(const std::string &text)
+        {
+            std::string result = text;
+            result.erase(std::find_if(result.rbegin(), result.rend(), [](unsigned char ch)
+                                      { return !std::isspace(ch); })
+                             .base(),
+                         result.end());
+            return result;
+        }
+
+        inline std::string trim(const std::string &text)
+        {
+            if (text.empty())
+                return "";
+            return ltrim(rtrim(text));
+        }
 
         inline std::string translate(const std::string &content, const size_t x, const size_t y, Method translation_method)
         {
@@ -203,51 +291,52 @@ namespace tui
             return os.str();
         }
 
-
-        
-        inline std::string br(const size_t numberOfLines , Method translation_method)
-        { 
-         switch (translation_method)
-         {
-         case Method::padding:return std::string(numberOfLines, '\n'); break;
-         
-         case Method::ansi:return "\033[" + std::to_string (numberOfLines) + "B"; break;
-         default:return "";break;
-         }
-        
-            return "";
-        }
-
-        inline std::string space(const size_t width , Method translation_method)
+        inline std::string br(const size_t numberOfLines, Method translation_method)
         {
-         switch (translation_method)
-         {
-         case Method::padding:return std::string(width, ' '); break;
-         
-         case Method::ansi:return "\033[" + std::to_string (width) + "C"; break;
-         default:return "";break;
-         }
-        
-            return "";
+            switch (translation_method)
+            {
+            case Method::padding:
+                return std::string(numberOfLines, '\n');
+                break;
 
+            case Method::ansi:
+                return "\033[" + std::to_string(numberOfLines) + "B";
+                break;
+            default:
+                return "";
+                break;
+            }
+
+            return "";
         }
 
+        inline std::string space(const size_t width, Method translation_method)
+        {
+            switch (translation_method)
+            {
+            case Method::padding:
+                return std::string(width, ' ');
+                break;
 
+            case Method::ansi:
+                return "\033[" + std::to_string(width) + "C";
+                break;
+            default:
+                return "";
+                break;
+            }
 
+            return "";
+        }
 
         inline std::string fg_color(const unsigned int color)
         {
-            if (color == 0)
-            {
-                return "\033[0m";
-            }
+            static const int basic_codes[16] = {30, 31, 32, 33, 34, 35, 36, 37, 90, 91, 92, 93, 94, 95, 96, 97};
 
-            else if (color <= 16)
+            if (color < 16)
             {
-                static const char *basic_colors[] = {"0", "30", "31", "32", "33", "34", "35", "36", "37", "90", "91", "92", "93", "94", "95", "96", "97"};
-                return "\033[" + std::string(basic_colors[color]) + "m";
+                return "\033[" + std::to_string(basic_codes[color]) + "m";
             }
-
             else if (color < 256)
             {
                 return "\033[38;5;" + std::to_string(color) + "m";
@@ -257,17 +346,11 @@ namespace tui
 
         inline std::string bg_color(const unsigned int color)
         {
-            if (color == 0)
+            static const int basic_codes[16] = {40, 41, 42, 43, 44, 45, 46, 47, 100, 101, 102, 103, 104, 105, 106, 107};
+
+            if (color < 16)
             {
-                return "\033[0m";
-            }
-            else if (color <= 8)
-            {
-                return "\033[" + std::to_string(39 + color) + "m";
-            }
-            else if (color <= 16)
-            {
-                return "\033[" + std::to_string(91 + color) + "m";
+                return "\033[" + std::to_string(basic_codes[color]) + "m";
             }
             else if (color < 256)
             {
@@ -280,9 +363,9 @@ namespace tui
         {
             if (r <= 255 && g <= 255 && b <= 255)
             {
-                std::ostringstream color;
-                color << "\033[38;2;" << r << ";" << g << ";" << b << "m";
-                return color.str();
+                std::ostringstream fg;
+                fg << "\033[38;2;" << r << ";" << g << ";" << b << "m";
+                return fg.str();
             }
             return "";
         }
@@ -298,8 +381,21 @@ namespace tui
             return "";
         }
 
+        inline std::string fg_color(const ans::IntRGB255 &colorValue)
+        {
+            std::ostringstream fg;
+            fg << "\033[38;2;" << colorValue.red() << ";" << colorValue.green() << ";" << colorValue.blue() << "m";
+            return fg.str();
+        }
 
-               inline std::string cls(Screen mode)
+        inline std::string bg_color(const ans::IntRGB255 &colorValue)
+        {
+            std::ostringstream bg;
+            bg << "\033[48;2;" << colorValue.red() << ";" << colorValue.green() << ";" << colorValue.blue() << "m";
+            return bg.str();
+        }
+
+        inline std::string cls(Screen mode)
         {
             if (mode == Screen::off)
                 return "";
@@ -319,65 +415,215 @@ namespace tui
 
         inline std::string reset() { return "\033[0m"; }
 
+        inline std::string line(const std::size_t width, const char style) { return std::string(width, style); }
 
-
-
-
-
-
-
-        inline std::string hr(const std::size_t width, const char style) { return "\n" + std::string(width, style) + "\n"; }
-
-        inline std::string hr(const size_t width, const std::string &style, const size_t numberOfLines)
+        inline std::string line(const size_t width, const std::string &style)
         {
             if (style.empty() || width == 0)
                 return "";
-            std::string line;
-            line.resize(width);
-            for (size_t l = 0; l < width; l++)
+            std::string result;
+            result.reserve(width);
+            for (size_t l = 0; l < width; ++l)
             {
-                line[l] = style[l % style.length()];
+                result.push_back(style[l % style.length()]);
             }
-
-            return "\n" + line + std::string(numberOfLines, '\n');
+            return result;
         }
 
+        inline std::string hr(const std::size_t width, const char style) { return "\n" + line(width, style) + "\n"; }
 
-        inline std::string border(const std::string &title, Border style)
+        inline std::string hr(const size_t width, const std::string &style, const size_t numberOfLines) { return "\n" + line(width, style) + std::string(numberOfLines, '\n'); }
+
+        struct BorderStyle
         {
-            std::ostringstream line;
-            std::string abc ;
-            abc.reserve(title.size());
-            for (char c : title) /*size_t i = 0; i < title.length(); i++*/{if (c != '\n' && c != '\r' && c != '\t') { abc.push_back(c); }}
+        private:
+            std::string leftchar_;
+            std::string rightchar_;
+            std::string outerChar_;
+            std::string innerChar_;
 
-            size_t length = abc.length() + 6;
+        public:
+            BorderStyle(const std::string &left, const std::string &right, const std::string &outer, const std::string &inner)
+                : leftchar_(left), rightchar_(right), outerChar_(outer), innerChar_(inner) {}
 
-            switch (style)
+            BorderStyle() = default;
+
+            static BorderStyle wall(const Border style)
             {
-            case Border::single:
-                line << str::hr(length, "-", 1) << "|  " << abc << "  |" << str::hr(length, "-", 1);
-                break;
-            case Border::bold:
-                line << str::hr(length, "=", 1) << "|| " << abc << " ||" << str::hr(length, "=", 1);
-                break;
-            case Border::star:
-                line << str::hr(length, ".", 1) << "*  " << abc << "  *" << str::hr(length, "*", 1);
-                break;
-            case Border::hash:
-                line << str::hr(length, "#", 1) << "#  " << abc << "  #" << str::hr(length, "#", 1);
-                break;
-            case Border::cross:
-                line << str::hr(length, "+", 1) << "=- " << abc << " -=" << str::hr(length, "+", 1);
-                break;
-            case Border::wave:
-                line << str::hr(length, "~", 1) << "~  " << abc << "  ~" << str::hr(length, "~", 1);
-                break;
-
-            default:
-                line << str::hr(length, "-", 1) << "|  " << abc << "  |" << str::hr(length, "-", 1);
-                break;
+                switch (style)
+                {
+                case Border::single:
+                    return BorderStyle("|", "|", "-", "-");
+                case Border::bold:
+                    return BorderStyle("||", "||", "=", "-");
+                case Border::star:
+                    return BorderStyle("*", "*", "*", "*");
+                case Border::hash:
+                    return BorderStyle("#", "#", "#", "=");
+                case Border::cross:
+                    return BorderStyle("|=", "=|", "+", "-");
+                case Border::wave:
+                    return BorderStyle("~", "~", "~", "~");
+                default:
+                    return BorderStyle("|", "|", "-", "-");
+                }
             }
-            return line.str();
+
+            std::string get_left() const { return leftchar_; }
+            std::string get_right() const { return rightchar_; }
+            std::string get_outer() const { return outerChar_; }
+            std::string get_inner() const { return innerChar_; }
+        };
+
+        inline std::string box(const std::string &abc, Border style, const size_t padding)
+        {
+            std::string content = validate_box_content(abc);
+            BorderStyle wall = BorderStyle::wall(style);
+
+            std::string hrChar = wall.get_outer();
+            std::string leftBorder = wall.get_left();
+            std::string rightBorder = wall.get_right();
+
+            size_t innerWidth = content.length() + (padding * 2) + 2;
+            size_t length = innerWidth + leftBorder.length() + rightBorder.length();
+
+            std::string hrLine = line(length, hrChar) + br();
+
+            std::ostringstream os;
+            os << br() << hrLine;
+
+            for (size_t i = 0; i < padding; i++)
+                os << leftBorder << std::string(innerWidth, ' ') << rightBorder << "\n";
+
+            os << leftBorder
+               << " " << std::string(padding, ' ') << content << std::string(padding, ' ') << " "
+               << rightBorder << "\n";
+
+            for (size_t i = 0; i < padding; i++)
+                os << leftBorder << std::string(innerWidth, ' ') << rightBorder << "\n";
+
+            os << hrLine;
+            return os.str();
+        }
+
+        inline std::string table(const std::vector<std::string> &text, Border style)
+        {
+            std::ostringstream os;
+
+            if (text.empty())
+                return os.str();
+
+            std::vector<std::string> validStr(text.size());
+
+            size_t maxLength = 0;
+            for (size_t r = 0; r < text.size(); r++)
+            {
+                validStr[r] = validate_box_content(text[r]);
+                if (validStr[r].length() > maxLength)
+                    maxLength = validStr[r].length();
+            }
+
+            BorderStyle wall = BorderStyle::wall(style);
+            std::string wallLeft = wall.get_left();
+            std::string wallRight = wall.get_right();
+            std::string outerChar = wall.get_outer();
+            std::string innerChar = wall.get_inner();
+
+            size_t length = maxLength + wallLeft.length() + wallRight.length() + 2;
+
+            os << str::hr(length, outerChar, 1);
+
+            for (size_t i = 0; i < text.size(); i++)
+            {
+                os << wallLeft << " " << validStr[i]
+                   << std::string(maxLength - validStr[i].length(), ' ')
+                   << " " << wallRight
+                   << str::hr(length, (i + 1 < text.size()) ? innerChar : outerChar, 1);
+            }
+
+            return os.str();
+        }
+
+        inline std::string box(const std::string &abc, Border style, const ans::IntRGB255 &textColor, const ans::IntRGB255 &bgColor, const ans::IntRGB255 &borderColor, const size_t padding)
+        {
+            std::string content = validate_box_content(abc);
+            BorderStyle wall = BorderStyle::wall(style);
+
+            std::string hrChar = wall.get_outer();
+            std::string leftBorder = wall.get_left();
+            std::string rightBorder = wall.get_right();
+
+            size_t innerWidth = content.length() + (padding * 2) + 2;
+            size_t length = innerWidth + leftBorder.length() + rightBorder.length();
+
+            std::string wallColor = fg_color(borderColor);
+            std::string fill = fg_color(textColor) + bg_color(bgColor);
+            std::string hrLine = wallColor + line(length, hrChar) + br() + reset();
+
+            std::ostringstream os;
+            os << br() << hrLine;
+
+            for (size_t i = 0; i < padding; i++)
+                os << wallColor << leftBorder << reset() << fill
+                   << std::string(innerWidth, ' ') << reset()
+                   << wallColor << rightBorder << reset() << "\n";
+
+            os << wallColor << leftBorder << reset()
+               << fill << " " << std::string(padding, ' ') << content << std::string(padding, ' ') << " " << reset()
+               << wallColor << rightBorder << reset() << "\n";
+
+            for (size_t i = 0; i < padding; i++)
+                os << wallColor << leftBorder << reset() << fill
+                   << std::string(innerWidth, ' ') << reset()
+                   << wallColor << rightBorder << reset() << "\n";
+
+            os << hrLine;
+            return os.str();
+        }
+
+        inline std::string table(const std::vector<std::string> &text, Border style, const ans::IntRGB255 &textColor, const ans::IntRGB255 &bgColor, const ans::IntRGB255 &borderColor)
+        {
+            std::ostringstream os;
+
+            if (text.empty())
+                return os.str();
+
+            std::vector<std::string> validStr(text.size());
+
+            size_t maxLength = 0;
+            for (size_t r = 0; r < text.size(); r++)
+            {
+                validStr[r] = validate_box_content(text[r]);
+                if (validStr[r].length() > maxLength)
+                    maxLength = validStr[r].length();
+            }
+
+            BorderStyle wall = BorderStyle::wall(style);
+            std::string wallLeft = wall.get_left();
+            std::string wallRight = wall.get_right();
+            std::string outerChar = wall.get_outer();
+            std::string innerChar = wall.get_inner();
+
+            std::string borderColorStr = fg_color(borderColor);
+            std::string contentColorStr = fg_color(textColor) + bg_color(bgColor);
+
+            size_t length = maxLength + wallLeft.length() + wallRight.length() + 2;
+
+            os << borderColorStr << str::hr(length, outerChar, 1);
+
+            for (size_t i = 0; i < text.size(); i++)
+            {
+                os << borderColorStr
+                   << wallLeft << contentColorStr << " " << validStr[i]
+                   << std::string(maxLength - validStr[i].length(), ' ')
+                   << " " << reset()
+                   << borderColorStr
+                   << wallRight
+                   << str::hr(length, (i + 1 < text.size()) ? innerChar : outerChar, 1);
+            }
+            os << reset();
+
+            return os.str();
         }
 
         inline std::string ordered_list(const std::vector<std::string> &Element)
@@ -399,7 +645,6 @@ namespace tui
             return out.str();
         }
 
-        
         inline std::string unordered_list(const std::vector<std::string> &Element)
         {
             std::ostringstream out;
@@ -409,7 +654,7 @@ namespace tui
             {
                 if ((i) < Element.size() - 1)
                 {
-                    out << " [#] "<< Element.at(i) << "\n\n";
+                    out << " [#] " << Element.at(i) << "\n\n";
                 }
                 else
                 {
@@ -420,12 +665,12 @@ namespace tui
         }
 
 
-
-        inline std::string create_page(const std::string &header, const std::vector<std::string> &Element)
+        
+        inline std::string ordered_menu(const std::string &header, const std::vector<std::string> &Element)
         {
             std::ostringstream out;
             out << "\n";
-            out << str::border(header, tui::Border::bold);
+            out << str::box(header, tui::Border::bold, 0);
 
             out << str::hr(80, "=", 2);
             out << ordered_list(Element);
@@ -434,8 +679,6 @@ namespace tui
             return out.str();
         }
 
-     
-        
         inline std::string ordered_list(const std::vector<std::vector<std::string>> &Element)
         {
             std::ostringstream out;
@@ -481,7 +724,8 @@ namespace tui
         }
 
 
-           inline std::string unordered_list(const std::vector<std::vector<std::string>> &Element)
+
+        inline std::string unordered_list(const std::vector<std::vector<std::string>> &Element)
         {
             std::ostringstream out;
             if (Element.empty() || Element[0].empty())
@@ -509,7 +753,7 @@ namespace tui
 
                 for (size_t j = 0; j < colN; j++)
                 {
-                    std::string elementOutput =  " [#] " + Element[i][j];
+                    std::string elementOutput = " [#] " + Element[i][j];
                     out << std::left << std::setw(static_cast<int>(auto_width)) << elementOutput;
                 }
                 if ((i) < Element.size() - 1)
@@ -525,22 +769,17 @@ namespace tui
             return out.str();
         }
 
-
-        
-
-        inline std::string create_page(const std::string &header, const std::vector<std::vector<std::string>> &Element)
+        inline std::string ordered_menu(const std::string &header, const std::vector<std::vector<std::string>> &Element)
         {
             std::ostringstream out;
             out << "\n";
-            out << border(header);
+            out << box(header);
             out << str::hr(80, "=", 2);
             out << ordered_list(Element);
             out << str::hr(80, "=", 2);
             out << " # Enter choice [ 11 , " << Element.size() << Element[0].size() << " ] to Select or [0] to go back : ";
             return out.str();
         }
-
-
 
         inline std::string edit_precision(long double number, int precision1, int precision2)
         {
@@ -551,13 +790,6 @@ namespace tui
             os << std::setprecision(precision2);
             return os.str();
         }
-
-
-
-
- 
-
-
 
     } // namespace str
 
@@ -718,10 +950,7 @@ namespace tui
             }
         }
 
-        inline std::string border(tui::Border style = tui::Border::bold) const
-        {
-            return str::border(content(), style);
-        }
+        inline std::string border(tui::Border style = tui::Border::bold) const { return str::box(content(), style, 0); }
 
         static std::string merge(const std::vector<std::string> &paragraph)
         {
@@ -739,9 +968,9 @@ namespace tui
 
 
 
-#if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
-    
 
+    
+#if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
 
     inline void pause(const std::string &message = " Press any Key to continue...", unsigned int duration = 50)
     {
@@ -857,12 +1086,7 @@ namespace tui
 
 #endif
 
-    
-
-
-
-
-#if defined(RANG_DOT_HPP)&& ! defined(CORNATUI_DISABLE_RANG_DOT_HPP)
+#if defined(RANG_DOT_HPP) && !defined(CORNATUI_DISABLE_RANG_DOT_HPP)
 
     inline void init_terminal()
     {
@@ -878,66 +1102,20 @@ namespace tui
 
     inline void fg_color(const int color, std::ostream &print = std::cout)
     {
+        static const rang::fg fg_codes[8] = {rang::fg::black, rang::fg::red, rang::fg::green, rang::fg::yellow, rang::fg::blue, rang::fg::magenta, rang::fg::cyan, rang::fg::gray};
+        static const rang::fgB fgB_codes[8] = {rang::fgB::black, rang::fgB::red, rang::fgB::green, rang::fgB::yellow, rang::fgB::blue, rang::fgB::magenta, rang::fgB::cyan, rang::fgB::gray};
+
         if (color <= 0)
         {
             print << rang::fg::reset;
         }
+        else if (color <= 8)
+        {
+            print << fg_codes[color - 1];
+        }
         else if (color <= 16)
         {
-            switch (color)
-            {
-            case 1:
-                print << rang::fg::black;
-                break;
-            case 2:
-                print << rang::fg::red;
-                break;
-            case 3:
-                print << rang::fg::green;
-                break;
-            case 4:
-                print << rang::fg::yellow;
-                break;
-            case 5:
-                print << rang::fg::blue;
-                break;
-            case 6:
-                print << rang::fg::magenta;
-                break;
-            case 7:
-                print << rang::fg::cyan;
-                break;
-            case 8:
-                print << rang::fg::gray;
-                break;
-            case 9:
-                print << rang::fgB::black;
-                break;
-            case 10:
-                print << rang::fgB::red;
-                break;
-            case 11:
-                print << rang::fgB::green;
-                break;
-            case 12:
-                print << rang::fgB::yellow;
-                break;
-            case 13:
-                print << rang::fgB::blue;
-                break;
-            case 14:
-                print << rang::fgB::magenta;
-                break;
-            case 15:
-                print << rang::fgB::cyan;
-                break;
-            case 16:
-                print << rang::fgB::gray;
-                break;
-            default:
-                print << rang::fg::reset;
-                break;
-            }
+            print << fgB_codes[color - 9];
         }
         else if (color < 256)
         {
@@ -947,66 +1125,20 @@ namespace tui
 
     inline void bg_color(const int color, std::ostream &print = std::cout)
     {
+        static const rang::bg bg_codes[8] = {rang::bg::black, rang::bg::red, rang::bg::green, rang::bg::yellow, rang::bg::blue, rang::bg::magenta, rang::bg::cyan, rang::bg::gray};
+        static const rang::bgB bgB_codes[8] = {rang::bgB::black, rang::bgB::red, rang::bgB::green, rang::bgB::yellow, rang::bgB::blue, rang::bgB::magenta, rang::bgB::cyan, rang::bgB::gray};
+
         if (color <= 0)
         {
             print << rang::bg::reset;
         }
+        else if (color <= 8)
+        {
+            print << bg_codes[color - 1];
+        }
         else if (color <= 16)
         {
-            switch (color)
-            {
-            case 1:
-                print << rang::bg::black;
-                break;
-            case 2:
-                print << rang::bg::red;
-                break;
-            case 3:
-                print << rang::bg::green;
-                break;
-            case 4:
-                print << rang::bg::yellow;
-                break;
-            case 5:
-                print << rang::bg::blue;
-                break;
-            case 6:
-                print << rang::bg::magenta;
-                break;
-            case 7:
-                print << rang::bg::cyan;
-                break;
-            case 8:
-                print << rang::bg::gray;
-                break;
-            case 9:
-                print << rang::bgB::black;
-                break;
-            case 10:
-                print << rang::bgB::red;
-                break;
-            case 11:
-                print << rang::bgB::green;
-                break;
-            case 12:
-                print << rang::bgB::yellow;
-                break;
-            case 13:
-                print << rang::bgB::blue;
-                break;
-            case 14:
-                print << rang::bgB::magenta;
-                break;
-            case 15:
-                print << rang::bgB::cyan;
-                break;
-            case 16:
-                print << rang::bgB::gray;
-                break;
-            default:
-                print << rang::bg::reset;
-                break;
-            }
+            print << bgB_codes[color - 9];
         }
         else if (color < 256)
         {
@@ -1016,45 +1148,17 @@ namespace tui
 
     inline void font_style(const int style, std::ostream &print = std::cout)
     {
+        static const rang::style style_codes[9] = {
+            rang::style::bold, rang::style::dim, rang::style::italic, rang::style::underline,
+            rang::style::blink, rang::style::rblink, rang::style::reversed, rang::style::conceal, rang::style::crossed};
+
         if (style <= 0)
         {
             print << rang::style::reset;
         }
         else if (style <= 9)
         {
-            switch (style)
-            {
-            case 1:
-                print << rang::style::bold;
-                break;
-            case 2:
-                print << rang::style::dim;
-                break;
-            case 3:
-                print << rang::style::italic;
-                break;
-            case 4:
-                print << rang::style::underline;
-                break;
-            case 5:
-                print << rang::style::blink;
-                break;
-            case 6:
-                print << rang::style::rblink;
-                break;
-            case 7:
-                print << rang::style::reversed;
-                break;
-            case 8:
-                print << rang::style::conceal;
-                break;
-            case 9:
-                print << rang::style::crossed;
-                break;
-            default:
-                print << rang::style::reset;
-                break;
-            }
+            print << style_codes[style - 1];
         }
     }
 
@@ -1062,7 +1166,31 @@ namespace tui
 
 #else
 
-    inline void init_terminal() { /* no-op */ }
+#if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
+
+    inline void init_terminal()
+    {
+
+        SetConsoleOutputCP(65001);
+        SetConsoleCP(65001);
+
+        HANDLE h_out = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (h_out != INVALID_HANDLE_VALUE)
+        {
+            DWORD dw_mode = 0;
+            if (GetConsoleMode(h_out, &dw_mode))
+            {
+                dw_mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+                SetConsoleMode(h_out, dw_mode);
+            }
+        }
+    }
+
+#else
+
+    inline void init_terminal() { /*coming soon*/ }
+
+#endif
 
     inline void fg_color(const int color, std::ostream &print = std::cout)
     {
@@ -1116,30 +1244,6 @@ namespace tui
     inline void reset(std::ostream &print = std::cout) { print << "\033[0m"; }
 
 #endif
-    
-   
-
-
-
-    inline void br(const size_t numberOfLines = 1, std::ostream &print = std::cout) { print << str::br(numberOfLines); }
-
-    inline void hr(const std::size_t width = 80, const char fillChar = '_', std::ostream &print = std::cout) { print << str::hr(width, fillChar); }
-
-    inline void hr(int width, const std::string &style, const int numberOfLines = 1, std::ostream &print = std::cout) { print << str::hr(width, style, numberOfLines); }
-
-    inline void create_border(const std::string &abc, Border style = Border::single, std::ostream &print = std::cout) { print << str::border(abc, style); }
-
-    inline void create_ordered_list(const std::vector<std::string> &Element, std::ostream &print = std::cout) { print << str::ordered_list(Element); }
-
-    inline void create_unordered_list(const std::vector<std::string> &Element, std::ostream &print = std::cout) { print << str::unordered_list(Element); }
-
-    inline void create_page(const std::string &header, const std::vector<std::string> &Element, std::ostream &print = std::cout) { print << str::create_page(header, Element); }
-
-    inline void create_ordered_list(const std::vector<std::vector<std::string>> &Element, std::ostream &print = std::cout) { print << str::ordered_list(Element); }
-
-    inline void create_page(const std::string &header, const std::vector<std::vector<std::string>> &Element, std::ostream &print = std::cout) { print << str::create_page(header, Element); }
-
-
 
     static const std::string breakKeywords[] = {"0", "_n", "_f", "_q", "exit", "quit", "break", "false"};
 
@@ -1154,12 +1258,8 @@ namespace tui
         return false;
     }
 
-
-
-
     namespace sound
     {
-
 
 #if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
 

@@ -1,374 +1,338 @@
-
-#define CORNATUI_DISABLE_WIN32
-#define CORNATUI_DISABLE_RANG_DOT_HPP
+// cornatui — feature demo
+//
+// A guided, menu-driven tour of everything cornatui.hpp / cornatui_math_ans.hpp
+// currently offers: colors, boxes & tables, Text styling, animation,
+// positioning, string utilities, and an "INFO" section about the library
+// and its author.
+//
+// Build:  g++ -std=c++17 -O2 test.cpp -o demo
 
 #include "cornatui.hpp"
 
+using namespace tui;
 
-namespace output
+// ---- shared color theme for the demo's own boxes/tables ----
+namespace theme
 {
-static const std::vector<std::string> list
+const ans::IntRGB255 text_color(220, 250, 220);
+const ans::IntRGB255 bg_color(15, 20, 18);
+const ans::IntRGB255 accent_color(57, 255, 20);
+}
+
+namespace demo
 {
-    "Color",
-    "Text effects test",  
-    "More [ e.g : animation , Translate , RGB , etc... ]",
-    "INFO"
+
+const std::vector<std::string> main_menu =
+{
+    "Colors                [ 16 named / 256 palette / RGB / IntRGB255 ]",
+    "Boxes, Tables & Menus [ str::box , str::table , str::ordered_menu ]",
+    "Text Effects          [ tui::Text class ]",
+    "Typewriter Animation  [ Text::write , Text::write_colorful ]",
+    "Positioning           [ str::translate , str::br , str::space ]",
+    "String Utilities      [ trim / case / reverse / edit_precision ]",
+    "INFO                  [ about cornatui , license , compatibility ]",
 };
 
-void color_list();
-void border_test();
-void animation_test();
-void font_test();
-void start_screen();
+void run();
 
-void rgb_test();
-void translate_test();
+void colors();
+void boxes_tables_menus();
+void text_effects();
+void animation();
+void positioning();
+void string_utilities();
 
-
-
-
-namespace Info
+namespace info
 {
- void informations_about_cornatui();
- void show_license();
- void show_compatibility();
- void error_message_info();
- void info();
+    void about();
+    void license();
+    void compatibility();
+    void menu();
 }
 
+// ---- small helpers shared by every section ----
 
+void header(const std::string &title)
+{
+    std::cout
+        << str::cls()
+        << str::box(title, Border::bold, theme::text_color, theme::bg_color, theme::accent_color, 0)
+        << str::fg_color(theme::accent_color)
+        << str::hr(80, "=", 2)
+        << str::reset();
 }
 
+void footer()
+{
+    std::cout << str::fg_color(theme::accent_color) << str::hr(80, "=", 2) << str::reset();
+    pause();
+}
 
-
+} // namespace demo
 
 int main()
 {
-std::string option;
-
-output::start_screen();
-
-tui::display_cursor(true);
-
-
-while(true)
-{
-
-tui::cls();
-std::cout<<tui::str::fg_color(ans::get_random_number(134, 255),ans::get_random_number(100, 255),ans::get_random_number(210,255));
-
-
-tui::br();
-
-
-
-tui::Text header = {"C++ Text User Interface Library"};
-
-
-
-std::cout<<tui::str::create_page(header.content(),output::list);
-
-
-std::cin>>option;
-tui::fg_color(0);
-if(option=="1"){output::color_list();}
-else if(option=="2"){output::font_test();}
-else if(option=="3"){output::animation_test();output::rgb_test();output::translate_test();}
-else if(option=="4"){output::Info::info();}
-else if(tui::check_break_keywords(option)){break;}
-
-}
-
-
+    init_terminal();
+    display_cursor(true);
+    demo::run();
     return 0;
 }
 
-
-
-
-
-
-
-
-namespace output 
+namespace demo
 {
 
-
-
-void color_list()
+void run()
 {
+    std::string option;
 
- std::ostringstream os16,os256;
- tui::fg_color(0);
- tui::cls();
- 
-  
- tui::br();
- tui::hr(100,"=",1);
+    std::vector<std::string> list;
+    for (size_t i = 0; i < main_menu.size(); i++)
+        list.push_back("[ " + std::to_string(i + 1) + " ] " + main_menu[i]);
 
- tui::create_border("normal colors & bright colors [ 1 , 16 ]");
- tui::br();
- for(size_t i=0;i<16;i++)
- {
-   os16 <<   tui::str::fg_color(i+1)<<" #"<<std::setfill('0')<<std::setw(2)<<i+1;
-   if((i+1)%8==0&&(i+1)!=16){os16 <<"\n";}
- }
- std::cout<<os16.str();
- tui::br();
- tui::fg_color(0);
+    while (true)
+    {
+        std::cout
+            << str::cls()
+            << str::translate(
+                   str::box(" cornatui |> Feature Demo & Library Info ", Border::bold,
+                            theme::text_color, theme::bg_color, theme::accent_color, 0)
+                       + str::fg_color(theme::text_color)
+                       + str::table(list, Border::cross, theme::text_color, theme::bg_color, theme::accent_color)
+                       + str::fg_color(theme::accent_color)
+                       + str::hr(80, "=", 2)
+                       + str::fg_color(theme::text_color)
+                       + " # Select option [1-7] , to exit [0] |> option -> ",
+                   2, 1);
 
+        std::cin >> option;
+        std::cout << str::reset();
 
- tui::create_border("[ 17 , 256 ] colors");
- tui::br();
- for(size_t k=16;k<256;k++)
- {
-    os256 << tui::str::fg_color(k+1) << "  #"<<std::setfill('0')<<std::setw(3)<<k+1;
-    if((k+1)%16==0&&(k+1)!=256){os256 <<"\n";}
- }
- std::cout<<os256.str();
- tui::fg_color(0);
- tui::br();
-
- tui::hr(100,"=",2);
-
-tui::pause();
-
-
- std::ostringstream osBg16,osBg256;
- tui::bg_color(0);
- tui::cls();
- 
-  
- tui::br();
- tui::hr(100,"=",1);
-
- tui::create_border("normal Bg colors & bright colors [ 1 , 16 ]");
- tui::br();
- for(size_t i=0;i<16;i++)
- {
-   osBg16 <<   tui::str::bg_color(i+1)<<" #"<<std::setfill('0')<<std::setw(2)<<i+1;
-   if((i+1)%8==0&&(i+1)!=16){osBg16 <<"\n";}
- }
- std::cout<<osBg16.str();
- tui::br();
- tui::bg_color(0);
-
-
- tui::create_border("[ 17 , 256 ] Bg colors");
- tui::br();
- for(size_t k=16;k<256;k++)
- {
-    osBg256 << tui::str::bg_color(k+1) << "  #"<<std::setfill('0')<<std::setw(3)<<k+1;
-    if((k+1)%16==0&&(k+1)!=256){osBg256 <<"\n";}
- }
- std::cout<<osBg256.str();
- tui::bg_color(0);
- tui::br();
-
- tui::hr(100,"=",2);
-
-tui::pause();
-
-
-return;
+        if (option == "1") colors();
+        else if (option == "2") boxes_tables_menus();
+        else if (option == "3") text_effects();
+        else if (option == "4") animation();
+        else if (option == "5") positioning();
+        else if (option == "6") string_utilities();
+        else if (option == "7") info::menu();
+        else if (check_break_keywords(option)) break;
+    }
 }
 
+// ---------------------------------------------------------------- colors --
 
-
-void border_test()
+void colors()
 {
-    tui::cls();
-    tui::br();
-    tui::create_border("Border Test ");
+    header("Colors  [ 16 named ]  ( str::fg_color(1-16) )");
 
-    tui::hr(80, "=" , 1);
-   
-    tui::create_border("single", tui::Border::single);
-    tui::create_border("bold"  , tui::Border::bold);
-    tui::create_border("star"  , tui::Border::star);
-    tui::create_border("hash"  , tui::Border::hash);
-    tui::create_border("cross" , tui::Border::cross);
-    tui::create_border("wave"  , tui::Border::wave);
+    for (unsigned int i = 1; i <= 16; i++)
+    { 
 
-    tui::hr(80, "=", 2);
-    tui::pause();
-}
+    std::cout << str::fg_color(i) << " #" << std::setfill('0') << std::setw(2) << i << " " << str::reset();
+    if((i)%8==0)std::cout<<str::br();
+    } 
+    footer();
 
+    header("Colors  [ 256 palette ]  ( str::fg_color(17-255) )");
+    std::cout << "  ";
+    for (unsigned int i = 17; i < 256; i++)
+    {
+        std::cout << str::fg_color(i) << " #" << std::setfill('0') << std::setw(3) << i << " " << str::reset();
+        if ((i - 16) % 12 == 0) std::cout << "\n  ";
+    }
+    std::cout<<str::br();
+    footer();
 
-void animation_test()
-{
-    tui::cls();
-    tui::br();
-    tui::create_border("Animation Test");
-
-    tui::hr(80, "=",2);
-    std::string message = " # This is an animation test";
-    tui::Text animatedText = {message};
-
-    animatedText.write(50);
-    tui::br(2);
-    animatedText.write_colorful(50, 1, 255);
-    tui::br();
-    tui::hr(80, "=", 2);
-    tui::pause();
-}
-
-void font_test()
-{
-
-tui::cls();
-
-tui::create_border("text effects test", tui::Border::bold);
-
-tui::hr(80, "=", 2);
-tui::Text message = {"I Love Conratui Library"};
-
-
-
-std::vector<std::string> font
-{
-    message.content(),
-    message.color(5),
-    message.lowercase(),
-    message.uppercase(),
-    message.bold(),
-    message.dim(),
-    message.italic(),
-    message.underline(),
-    message.blink(),
-    message.reversed(),
-    message.bg_colorful(),
-    message.crossed(),
-    message.double_underline(),
-    message.curly_underline(),
-    message.overline(),
-    message.reverse(),
-    message.colorful(50, 220)
-};
-
-std::vector<std::string> msg
-{
-
-    "always works         -> normal text       :",
-    "always works         -> colored text      :",
-    "always works         -> lowercase text    :",
-    "always works         -> uppercase text    :",
-    "widely supported     -> bold text         :",
-    "widely supported     -> dim text          :",
-    "most terminals       -> italic text       :",
-    "widely supported     -> underline text    :",
-    "widely supported     -> blink text        :",
-    "widely supported     -> reversed bg text  :",
-    "widely supported     -> bg_colorful text  :",
-    "widely supported     -> crossed out text  :",
-    "inconsistent support -> double underline  :",
-    "modern terms only    -> curly underline   :",
-    "limited support      -> overline text     :",
-    "always works         -> reversed text     :",
-    "always works         -> colorful text     :"
-
-};
-
-for (size_t i = 0; i < msg.size(); i++) { msg.at(i) = msg.at(i) + " " + font.at(i); }
-
-
-
-
-tui::create_unordered_list(msg);
-
-tui::hr(80, "=", 2);
-
-tui::pause();
-
-border_test();
-
-}
-
-
-
-void rgb_test()
-{
-    tui::cls();
-    tui::br();
-    tui::create_border("True RGB Test", tui::Border::bold);
-    tui::hr(80, "=", 2);
-
+    header("Colors  [ True RGB ]  ( str::fg_color(r,g,b) / str::bg_color(r,g,b) )");
+    std::cout << "  ";
     for (int i = 0; i < 256; i += 8)
     {
-        std::cout << tui::str::fg_color(255 - i, i, 128)
-                   << tui::str::bg_color(i, 40, 255 - i)
-                   << " ## ";
-        if ((i + 8) % 64 == 0&&(i + 8)!=256)tui::br();
+        std::cout << str::fg_color(255 - i, i, 128) << str::bg_color(i, 40, 255 - i) << " ## " << str::reset();
+        if ((i + 8) % 64 == 0) std::cout << "\n  ";
     }
 
-    tui::fg_color(0);
-    tui::br();
-    tui::hr(80, "=", 2);
-    tui::pause();
+    footer();
+
+    header("Colors  [ ans::IntRGB255 ]  -  a clamped 0-255 RGB value type");
+    ans::IntRGB255 a(220, 60, 90), b(40, 180, 60);
+    std::vector<std::string> rows =
+    {
+        "IntRGB255(220,60,90).hex()  -> " + a.hex(),
+        "IntRGB255(40,180,60).hex()  -> " + b.hex(),
+        "(a + b).hex()  -> " + (a + b).hex() + "   ( channels added, clamped to 255 )",
+        "(a - b).hex()  -> " + (a - b).hex() + "   ( channels subtracted, clamped to 0 )",
+    };
+    std::cout
+        << str::fg_color(a) << rows[0] << str::reset() << "\n"
+        << str::fg_color(b) << rows[1] << str::reset() << "\n"
+        << str::fg_color(a + b) << rows[2] << str::reset() << "\n"
+        << str::fg_color(a - b) << rows[3] << str::reset() << "\n\n"
+        << "  # str::fg_color() / str::bg_color() also accept an ans::IntRGB255 directly,\n"
+        << "  # which is what the colored str::box() and str::table() overloads use.\n";
+    footer();
 }
 
-void translate_test()
+// ------------------------------------------------------- boxes / tables ---
+
+void boxes_tables_menus()
 {
-    tui::cls();
-    tui::br();
-    tui::create_border("Translate Test", tui::Border::bold);
-    tui::hr(80, "=" , 2);
-    std::cout<<"Normal Text";
-    std::cout << tui::str::translate("Padding Method\nLine Two", 10, 2, tui::Method::padding);
-    tui::br();
-    std::cout << tui::str::translate("ANSI Method\nLine Two", 20, 2, tui::Method::ansi);
+    header("Boxes  ( str::box )");
+    std::cout
+        << str::box("Plain box, single border, no padding", Border::single) 
+        << str::box("Bold border, 1 line of padding", Border::bold, 1) 
+        << str::box("Colored box ( text / background / border via IntRGB255 )",
+                     Border::cross, theme::text_color, theme::bg_color, theme::accent_color, 1)<<str::br();
+    footer();
 
-    tui::br();
-    tui::hr(80, "=", 2);
-    tui::pause();
+    header("Border Styles  ( tui::Border )");
+    std::vector<std::pair<std::string, Border>> styles =
+    {
+        {"single", Border::single}, {"bold", Border::bold}, {"star", Border::star},
+        {"hash", Border::hash}, {"cross", Border::cross}, {"wave", Border::wave},
+    };
+
+
+    for (const auto &s : styles)std::cout << str::box(s.first, s.second);
+    std::cout<<str::br();
+    footer();
+
+    header("Tables  ( str::table )  -  bordered, unnumbered rows");
+    std::vector<std::string> rows = {"Row one", "Row two is a little longer", "Row three"};
+    std::cout
+        << str::table(rows, Border::cross) 
+        << str::table(rows, Border::hash, theme::text_color, theme::bg_color, theme::accent_color) << "\n";
+    footer();
+
+    header("Menus  ( str::ordered_menu )  -  header + numbered list + prompt");
+    std::vector<std::string> items = {"First choice", "Second choice", "Third choice"};
+    std::cout << str::ordered_menu("Example Menu", items)<<str::br(3);
+    footer();
+
+    header("2D variant  ( str::ordered_list on a vector<vector<string>> )");
+    std::vector<std::vector<std::string>> grid = {{"A1", "A2"}, {"B1", "B2"}};
+    std::cout << str::ordered_list(grid) << "\n";
+    footer();
 }
 
-void start_screen()
+// ------------------------------------------------------------ Text class --
+
+void text_effects()
 {
+    header("Text Effects  ( tui::Text )");
+    Text message = {"I Love Cornatui"};
 
-tui::display_cursor(false);
+    std::vector<std::string> rows =
+    {
+        "content()            -> " + message.content(),
+        "color(5)             -> " + message.color(5),
+        "lowercase()          -> " + message.lowercase(),
+        "uppercase()          -> " + message.uppercase(),
+        "reverse()            -> " + message.reverse(),
+        "bold()               -> " + message.bold(),
+        "dim()                -> " + message.dim(),
+        "italic()             -> " + message.italic(),
+        "underline()          -> " + message.underline(),
+        "double_underline()   -> " + message.double_underline(),
+        "curly_underline()    -> " + message.curly_underline(),
+        "overline()           -> " + message.overline(),
+        "blink()              -> " + message.blink(),
+        "reversed()           -> " + message.reversed(),
+        "crossed()            -> " + message.crossed(),
+        "separate(2)          -> " + message.separate(2),
+        "colorful(50,220)     -> " + message.colorful(50, 220),
+        "bg_colorful()        -> " + message.bg_colorful(),
+    };
 
+    std::cout << str::unordered_list(rows);
+    footer();
+}
 
+// -------------------------------------------------------------- animation --
 
-for(int i =0 ; i<50;i++)
+void animation()
 {
-tui::font_style(1);
+    header("Animation  ( Text::write / Text::write_colorful )");
 
-tui::cls();
-std::ostringstream os,os1;
-os<<"Developed By  A n a s R i e m a n n , Loading -> [ "<<std::setfill('0')<<std::setw(3)<<2*(i+1)<<"% : 100% ]";
+    display_cursor(false);
 
-tui::Text var = {os.str()};   
+    Text line1 = {" # cornatui typewriter effect..."};
+    line1.write(35);
+    std::cout << "\n\n";
 
+    Text line2 = {" # ...and now with a random color per character"};
+    line2.write_colorful(35, 1, 255);
+    std::cout << "\n\n";
 
-tui::br();
+    display_cursor(true);
 
-os1<<tui::str::create_page(os.str(),output::list);
+    std::cout << "  # tui::sound::ring() just rang the terminal bell.\n";
+    sound::ring();
 
-std::cout<<tui::Text(os1.str()).colorful();
+#if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
+    std::cout << "  # tui::sound::beep() is also available on native Windows builds.\n";
+    sound::beep();
+#endif
 
-
-
-tui::delay_ms(100-1.9*i);
-
+    std::cout << "\n";
+    footer();
 }
 
+// ------------------------------------------------------------- positioning --
 
+void positioning()
+{
+    header("Positioning  ( str::translate , str::br , str::space )");
 
+    std::cout << "Normal text, no offset\n\n";
+    std::cout << str::translate("Method::padding, x=10 y=1\nsecond line", 10, 1, Method::padding);
+    std::cout << "\n";
+    std::cout << str::translate("Method::ansi, x=20 y=1\nsecond line", 20, 1, Method::ansi);
+    std::cout << "\n\n";
+    std::cout << "str::space(10) between brackets: [" << str::space(10) << "]\n";
+    std::cout << "str::br(2) inserts two blank lines below this one:" << str::br(2);
+    std::cout << "  # tui::Screen (off / view / full) controls how much cls() clears -\n"
+                 "  # this whole page was drawn with the default str::cls(Screen::full).\n\n";
+    footer();
 }
 
+// -------------------------------------------------------- string utilities --
 
+void string_utilities()
+{
+    header("String Utilities  ( tui::str::* )");
+    std::string sample = "   Hello, cornaTUI!   ";
 
-namespace Info
+    std::vector<std::string> rows =
+    {
+        "input                          -> [" + sample + "]",
+        "trim(input)                    -> [" + str::trim(sample) + "]",
+        "ltrim(input)                   -> [" + str::ltrim(sample) + "]",
+        "rtrim(input)                   -> [" + str::rtrim(sample) + "]",
+        "lowercase(input)               -> [" + str::lowercase(sample) + "]",
+        "uppercase(input)               -> [" + str::uppercase(sample) + "]",
+        "reverse(input)                 -> [" + str::reverse(sample) + "]",
+        "ignore_spaces(input)           -> [" + str::ignore_spaces(sample) + "]",
+        "ignore_character(input, 'l')   -> [" + str::ignore_character(sample, 'l') + "]",
+        "get_ascii_only(input)          -> [" + str::get_ascii_only(sample) + "]",
+        "validate_box_content(input)    -> [" + str::validate_box_content(sample) + "]",
+        "edit_precision(3.14159L, 2, 6) -> [" + str::edit_precision(3.14159L, 2, 6) + "]",
+        "Text::merge({...})             -> [" + Text::merge({"Hello, ", "this ", "is ", "merged."}) + "]",
+    };
+
+    std::cout << str::unordered_list(rows);
+    footer();
+}
+
+// ----------------------------------------------------------------- info ----
+
+namespace info
 {
 
 constexpr const char *Name       = "cornatui";
 constexpr const char *NameOrigin = "C++ ornament text user interface";
-constexpr const char *Version    = "0.0.2";  
+constexpr const char *Version    = "0.0.3";
 constexpr const char *Author     = "Anas Riemann";
-constexpr const char *Repository = "https://github.com/AnasRiemann/cornatui-lib"; 
+constexpr const char *Repository = "https://github.com/AnasRiemann/cornatui-lib";
 constexpr const char *License    = "MIT";
-
 
 inline const std::string MIT_LICENSE_Content = R"LICENSE(
  MIT License
@@ -394,236 +358,95 @@ inline const std::string MIT_LICENSE_Content = R"LICENSE(
  SOFTWARE.
 )LICENSE";
 
-
-
-inline void informations_about_cornatui()
+void about()
 {
-    tui::cls();
-    tui::br();
+    header("About cornatui");
 
-    tui::fg_color(4);
-    tui::create_border("About Cornatui", tui::Border::bold);
-
-    tui::hr(80, "=", 2);
-
-    tui::fg_color(13);
-    std::cout << "  cornatui is a lightweight, header-only C++ library for building";
-    tui::br();
-    std::cout << "  retro text UIs in the terminal : colors, borders, animated text";
-    tui::br();
-    std::cout << "  and simple menus.";
-    tui::br(2);
-
-
-    tui::fg_color(13);
-    std::cout << "  # Name origin : ";
-    tui::fg_color(11);
-    std::cout << Name << " = " << NameOrigin;
-
-    tui::br();
-
-    tui::fg_color(4);
-    tui::hr(80, "-", 2);
-
-    tui::fg_color(13);
-    std::cout << "  # Name        : ";
-    tui::fg_color(11);
-    std::cout << Name;
-    tui::br();
-    tui::fg_color(13);
-    std::cout << "  # Version     : ";
-    tui::fg_color(11);
-    std::cout << Version;
-    tui::br();
-    tui::fg_color(13);
-    std::cout << "  # Author      : ";
-    tui::fg_color(11);
-    std::cout << Author;
-    tui::br();
-    tui::fg_color(13);
-    std::cout << "  # Repository  : ";
-    tui::fg_color(11);
-    std::cout << Repository;
-    tui::br();
-    tui::fg_color(13);
-    std::cout << "  # License     : ";
-    tui::fg_color(11);
-    std::cout << License;
-    tui::br();
-    tui::fg_color(13);
-    std::cout << "  # Build date  : ";
-    tui::fg_color(11);
-    std::cout << __DATE__ << "  " << __TIME__;
-    tui::br();
-    tui::fg_color(13);
-    std::cout << "  # Language    : ";
-    tui::fg_color(11);
-    std::cout << "C++" << " version " << __cplusplus << " .";
-    tui::br();
-    tui::fg_color(4);
-    tui::hr(80, "-", 2);
-    tui::fg_color(13);
-    std::cout << "  # Dependencies : cornatui_math_ans.hpp .";
-    tui::br();
-    tui::fg_color(4);
-    tui::hr(80, "=", 2);
-    tui::fg_color(0);
-    tui::pause();
-}
-
-
-inline void show_license()
-{
-    tui::cls();
-    tui::fg_color(13);
-
-    std::cout<<
-    tui::str::translate
-    (
-    tui::Text::merge
-    (
+    std::vector<std::string> rows =
     {
-    tui::str::border("MIT License Content", tui::Border::bold),
-    tui::str::hr(80, "=", 1),
-    MIT_LICENSE_Content,
-    tui::str::hr(80, "=", 2) 
-    }
-    ),
-    2,
-    1,
-    tui::Method::ansi
-    );
-
-    tui::pause();
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-inline void show_compatibility()
-{
-    tui::cls();
-    tui::br();
-    tui::fg_color(4);
-    tui::create_border("System Compatibility", tui::Border::bold);
-
-    tui::hr(80, "=", 2);
-
-    tui::fg_color(13);
-    std::cout << "  [+] Supported Operating Systems";
-    tui::br(2);
-    tui::fg_color(11);
-    std::cout << "  - Windows 10+  ( Best : Windows Terminal )";
-    tui::br();
-    std::cout << "  - Linux        ( GNOME Terminal , Konsole recommended )";
-    tui::br();
-    std::cout << "  - macOS 10.14+ ( iTerm2 recommended )";
-    tui::br();
-
-    tui::fg_color(4);
-    tui::hr(80, "-", 2);
-    tui::fg_color(13);
-    std::cout << "  [+] Color Support";
-    tui::br(2);
-    tui::fg_color(11);
-    std::cout << " - 16 named colors     : always available";
-    tui::br();
-    std::cout << " - 256-color palette   : most modern terminals";
-    tui::br();
-    std::cout << " - True RGB color      : Windows Terminal, Linux, macOS";
-    tui::br();
-
-    tui::fg_color(4);
-    tui::hr(80, "-", 2);
-    tui::fg_color(13);
-    std::cout << "  [+] Known Limitations";
-    tui::br(2);
-    tui::fg_color(11);
-    std::cout << " - tui::Text keeps ASCII characters only ( no UTF-8 content yet )";
-    tui::br();
-    std::cout << " - tui::cls() ( clears scrollback too ) doesn't work in every terminal";
-    tui::br();
-    std::cout << " - Blink / curly underline may be ignored on older terminals";
-    tui::br();
-
-    tui::fg_color(4);
-    tui::hr(80, "-", 2);
-    tui::fg_color(13);
-    std::cout << "  [+] Report issues";
-    tui::br(2);
-    tui::fg_color(11);
-    std::cout << " - issues : " << "https://github.com/AnasRiemann/cornatui-lib/issues";
-
-    tui::br();
-    tui::fg_color(4);
-    tui::hr(80, "=", 2);
-    tui::pause();
-}
-
-inline void error_message_info()
-{
-    tui::fg_color(2);
-    tui::br();
-    std::cout << "  [!] Invalid choice, please try again.";
-    tui::br();
-    tui::fg_color(0);
-    tui::delay_ms(600);
-}
-
-inline void info()
-{
-    const std::vector<std::string> selectInfoList =
-    {
-        "About  cornatui",
-        "About LICENSE",
-        "Compatibility & Supported Terminals"
+        "Name          : " + std::string(Name),
+        "Name origin   : " + std::string(Name) + " = " + std::string(NameOrigin),
+        "Version       : " + std::string(Version),
+        "Author        : " + std::string(Author),
+        "Repository    : " + std::string(Repository),
+        "License       : " + std::string(License),
+        "Build date    : " + std::string(__DATE__) + "  " + std::string(__TIME__),
+        "Language      : C++ version " + std::to_string(__cplusplus),
+        "Dependencies  : cornatui_math_ans.hpp  ,  rang.hpp (optional)",
     };
+
+    std::cout << str::table(rows, Border::hash, theme::text_color, theme::bg_color, theme::accent_color);
+    footer();
+}
+
+void license()
+{
+    std::cout
+        << str::cls()
+        << str::fg_color(theme::text_color)
+        << str::translate(
+               str::box("MIT License", Border::bold, theme::text_color, theme::bg_color, theme::accent_color, 0)
+                   + str::fg_color(theme::text_color)
+                   + str::hr(80, "=", 1)
+                   + MIT_LICENSE_Content
+                   + str::hr(80, "=", 2),
+               2, 1);
+    pause();
+}
+
+void compatibility()
+{
+    header("Compatibility");
+
+    std::vector<std::string> rows =
+    {
+        "Windows 10+   : cmd.exe , PowerShell , Windows Terminal , Git Bash",
+        "Linux         : GNOME Terminal , Konsole , xterm and friends",
+        "macOS 10.14+  : Terminal.app , iTerm2",
+        "16 colors     : always available",
+        "256 colors    : most modern terminals",
+        "True RGB      : Windows Terminal , most Linux/macOS terminals",
+        "Limitation    : tui::Text keeps ASCII characters only ( no UTF-8 content )"
+
+    };
+
+    std::cout << str::table(rows, Border::single, theme::text_color, theme::bg_color, theme::accent_color);
+    footer();
+}
+
+void menu()
+{
+    const std::vector<std::string> items = {"About cornatui", "License", "Compatibility"};
+    std::vector<std::string> list;
+    for (size_t i = 0; i < items.size(); i++)
+        list.push_back("[ " + std::to_string(i + 1) + " ] " + items[i]);
 
     std::string select;
     while (true)
     {
-        tui::cls();
-        tui::fg_color(14);
-        tui::create_page("INFO", selectInfoList);
+        std::cout
+            << str::cls()
+            << str::translate(
+                   str::box(" INFO ", Border::bold, theme::text_color, theme::bg_color, theme::accent_color, 0)
+                       + str::fg_color(theme::text_color)
+                       + str::table(list, Border::cross, theme::text_color, theme::bg_color, theme::accent_color)
+                       + str::fg_color(theme::accent_color)
+                       + str::hr(80, "=", 2)
+                       + str::fg_color(theme::text_color)
+                       + " # Select option [1-3] , to go back [0] |> option -> ",
+                   2, 1);
 
         std::cin >> select;
-        select = tui::Text(select).lowercase();
+        select = str::lowercase(select);
+        std::cout << str::reset();
 
-        if (select == "1" || select == "a" || select == "i" || select == "info")
-        {
-            informations_about_cornatui(); continue;
-        }
-        else if (select == "2" || select == "b" || select == "ii" || select == "license")
-        {
-            show_license(); continue;
-        }
-        else if (select == "3" || select == "c" || select == "iii" || select == "compatibility")
-        {
-            show_compatibility(); continue;
-        }
-        else if (tui::check_break_keywords(select)) { break; }
-        else { error_message_info(); }
+        if (select == "1") about();
+        else if (select == "2") license();
+        else if (select == "3") compatibility();
+        else if (check_break_keywords(select)) break;
     }
 }
 
-} // namespace Info
+} // namespace info
 
-
-
-}
+} // namespace demo

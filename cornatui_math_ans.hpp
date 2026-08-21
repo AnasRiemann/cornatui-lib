@@ -1,5 +1,6 @@
 #ifndef  ANAS_MATH_HPP
 #define  ANAS_MATH_HPP
+
 #include <cmath>
 #include <vector>
 #include <functional>
@@ -7,8 +8,97 @@
 #include <complex>
 #include <algorithm>
 #include <string>
+#include <sstream>
+#include <iomanip>
+#include <chrono>
+#include <thread>
+#include <atomic>
+#include <cstdlib>
+#include <cstring>
+
+
+
 namespace ans
 {
+
+
+
+
+
+
+struct IntRGB255
+{
+private:
+    unsigned int red_{0};
+    unsigned int green_{0};
+    unsigned int blue_{0};
+
+    void validate_value_rgb(unsigned int r, unsigned int g, unsigned int b)
+    {
+        red_   = (r <= 255) ? r : 0;
+        green_ = (g <= 255) ? g : 0;
+        blue_  = (b <= 255) ? b : 0;
+    }
+
+    
+    static unsigned int clamp_color(int val)
+{
+    if (val < 0) return 0;
+    if (val > 255) return 255;
+    return static_cast<unsigned int>(val);
+}
+
+public:
+    IntRGB255() = default;
+
+    IntRGB255(unsigned int r, unsigned int g, unsigned int b)
+    {
+        validate_value_rgb(r, g, b);
+    }
+
+    unsigned int red() const   { return red_; }
+    unsigned int green() const { return green_; }
+    unsigned int blue() const  { return blue_; }
+
+    
+
+std::string hex() 
+const 
+{
+    std::ostringstream os;
+    os << "#" 
+       << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << red_
+       << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << green_
+       << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << blue_;
+    return os.str();
+}
+
+inline IntRGB255 operator+(const IntRGB255 &color) const 
+{ 
+    return 
+    { 
+        clamp_color(static_cast<int>(red())   + static_cast<int>(color.red())),
+        clamp_color(static_cast<int>(green()) + static_cast<int>(color.green())),
+        clamp_color(static_cast<int>(blue())  + static_cast<int>(color.blue()))
+    };
+}
+
+
+inline IntRGB255 operator-(const IntRGB255 &color) const 
+{ 
+    return 
+    { 
+        clamp_color(static_cast<int>(red())   - static_cast<int>(color.red())),
+        clamp_color(static_cast<int>(green()) - static_cast<int>(color.green())),
+        clamp_color(static_cast<int>(blue())  - static_cast<int>(color.blue()))
+    };
+}
+
+
+};
+
+
+
 
 
 
@@ -99,6 +189,34 @@ inline long double min_value(const long double *numarr, const int size, const in
     }
     return min;
 }
+
+
+
+inline size_t max_value(const std::vector<size_t>numbers)
+{
+    long double max = numbers[0];
+    for (int j = 1 ; j < numbers.size(); j++)
+    {
+        if (max < numbers[j])
+        {
+            max = numbers[j];
+        }
+    }
+
+    return max;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 inline bool is_prime(const long long x)
 {
