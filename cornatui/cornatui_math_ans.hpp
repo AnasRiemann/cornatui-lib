@@ -1,21 +1,39 @@
-#ifndef  ANAS_MATH_HPP
-#define  ANAS_MATH_HPP
+#ifndef  CORNATUI_MATH_ANS
+#define  CORNATUI_MATH_ANS
 
 #include <cmath>
 #include <vector>
 #include <functional>
 #include <random>
-#include <complex>
-#include <algorithm>
 #include <string>
 #include <sstream>
 #include <iomanip>
-#include <chrono>
-#include <thread>
-#include <atomic>
-#include <cstdlib>
-#include <cstring>
 
+
+
+/*
+
+ Copyright (c) 2026 Anas Riemann
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+
+*/
 
 
 namespace ans
@@ -24,28 +42,25 @@ namespace ans
 
 
 
-
-
 struct IntRGB255
 {
 private:
-    unsigned int red_{0};
-    unsigned int green_{0};
-    unsigned int blue_{0};
+    unsigned char red_{0};
+    unsigned char green_{0};
+    unsigned char blue_{0};
 
-    void validate_value_rgb(unsigned int r, unsigned int g, unsigned int b)
-    {
-        red_   = (r <= 255) ? r : 0;
-        green_ = (g <= 255) ? g : 0;
-        blue_  = (b <= 255) ? b : 0;
-    }
-
-    
-    static unsigned int clamp_color(int val)
+  static unsigned int clamp_color(int val)
 {
-    if (val < 0) return 0;
+    if (val < 0)   return 0;
     if (val > 255) return 255;
     return static_cast<unsigned int>(val);
+}
+
+void validate_value_rgb(unsigned int r, unsigned int g, unsigned int b)
+{
+    red_   = static_cast<unsigned char>(clamp_color(static_cast<int>((r > 255) ? 255 : r)));
+    green_ = static_cast<unsigned char>(clamp_color(static_cast<int>((g > 255) ? 255 : g)));
+    blue_  = static_cast<unsigned char>(clamp_color(static_cast<int>((b > 255) ? 255 : b)));
 }
 
 public:
@@ -56,49 +71,71 @@ public:
         validate_value_rgb(r, g, b);
     }
 
-    unsigned int red() const   { return red_; }
+    unsigned int red()   const { return red_; }
     unsigned int green() const { return green_; }
-    unsigned int blue() const  { return blue_; }
+    unsigned int blue()  const { return blue_; }
 
-    
+    inline IntRGB255 operator+(const IntRGB255 &color) const
+    {
+        return
+        {
+            clamp_color(static_cast<int>(red())   + static_cast<int>(color.red())),
+            clamp_color(static_cast<int>(green()) + static_cast<int>(color.green())),
+            clamp_color(static_cast<int>(blue())  + static_cast<int>(color.blue()))
+        };
+    }
 
-std::string hex() 
-const 
-{
-    std::ostringstream os;
-    os << "#" 
-       << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << red_
-       << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << green_
-       << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << blue_;
-    return os.str();
-}
+    inline IntRGB255 operator-(const IntRGB255 &color) const
+    {
+        return
+        {
+            clamp_color(static_cast<int>(red())   - static_cast<int>(color.red())),
+            clamp_color(static_cast<int>(green()) - static_cast<int>(color.green())),
+            clamp_color(static_cast<int>(blue())  - static_cast<int>(color.blue()))
+        };
+    }
 
-inline IntRGB255 operator+(const IntRGB255 &color) const 
-{ 
-    return 
-    { 
-        clamp_color(static_cast<int>(red())   + static_cast<int>(color.red())),
-        clamp_color(static_cast<int>(green()) + static_cast<int>(color.green())),
-        clamp_color(static_cast<int>(blue())  + static_cast<int>(color.blue()))
-    };
-}
+    static IntRGB255 white() { return {255, 255, 255}; }
+    static IntRGB255 black() { return {0, 0, 0}; }
 
+    inline IntRGB255 inverse() const
+    {
+        return white() - *this;
+    }
 
-inline IntRGB255 operator-(const IntRGB255 &color) const 
-{ 
-    return 
-    { 
-        clamp_color(static_cast<int>(red())   - static_cast<int>(color.red())),
-        clamp_color(static_cast<int>(green()) - static_cast<int>(color.green())),
-        clamp_color(static_cast<int>(blue())  - static_cast<int>(color.blue()))
-    };
-}
+    inline IntRGB255 brightness(const unsigned int value) const
+    {
+        unsigned int v = (value > 255) ? 255 : value;
+        return
+        {
+            clamp_color(static_cast<int>(red())   * static_cast<int>(v)),
+            clamp_color(static_cast<int>(green()) * static_cast<int>(v)),
+            clamp_color(static_cast<int>(blue())  * static_cast<int>(v))
+        };
+    }
 
+    inline IntRGB255 darkness(const unsigned int value) const
+    {
+        if (value == 0) return white();
+        unsigned int v = (value > 256) ? 256 : value;
+        return
+        {
+            clamp_color(static_cast<int>(red())   / static_cast<int>(v)),
+            clamp_color(static_cast<int>(green()) / static_cast<int>(v)),
+            clamp_color(static_cast<int>(blue())  / static_cast<int>(v))
+        };
+    }
 
+    std::string hex() const
+    {
+        std::ostringstream os;
+        os << "#"
+           << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << static_cast<int>(red_)
+           << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << static_cast<int>(green_)
+           << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << static_cast<int>(blue_);
+        return os.str();
+    }
 };
-
-
-
 
 
 

@@ -7,16 +7,20 @@
 //
 // Build:  g++ -std=c++17 -O2 test.cpp -o demo
 
-#include "cornatui.hpp"
+#define CORNATUI_DISABLE_WIN32
+#define CORNATUI_DISABLE_RANG_DOT_HPP
+#include "cornatui/cornatui.hpp"
+
+
 
 using namespace tui;
 
 // ---- shared color theme for the demo's own boxes/tables ----
 namespace theme
 {
-const ans::IntRGB255 text_color(220, 250, 220);
-const ans::IntRGB255 bg_color(15, 20, 18);
-const ans::IntRGB255 accent_color(57, 255, 20);
+ ans::IntRGB255 text_color(ans::get_random_number(180,240), ans::get_random_number(180,240),  ans::get_random_number(180,240));
+ ans::IntRGB255 bg_color(ans::get_random_number(10,30), ans::get_random_number(15,35),  ans::get_random_number(20,40));
+ ans::IntRGB255 accent_color(ans::get_random_number(200,250), ans::get_random_number(190,245),  ans::get_random_number(200,250));
 }
 
 namespace demo
@@ -29,7 +33,7 @@ const std::vector<std::string> main_menu =
     "Text Effects          [ tui::Text class ]",
     "Typewriter Animation  [ Text::write , Text::write_colorful ]",
     "Positioning           [ str::translate , str::br , str::space ]",
-    "String Utilities      [ trim / case / reverse / edit_precision ]",
+    "String Utilities      [ trim / case / reverse / etc.. ]",
     "INFO                  [ about cornatui , license , compatibility ]",
 };
 
@@ -56,7 +60,7 @@ void header(const std::string &title)
 {
     std::cout
         << str::cls()
-        << str::box(title, Border::bold, theme::text_color, theme::bg_color, theme::accent_color, 0)
+        << str::box(title, Border::mix, theme::text_color, theme::bg_color, theme::accent_color, 0)
         << str::fg_color(theme::accent_color)
         << str::hr(80, "=", 2)
         << str::reset();
@@ -73,7 +77,36 @@ void footer()
 int main()
 {
     init_terminal();
-    display_cursor(true);
+    cls();
+    display_cursor(false);
+     std::vector<std::string> list;
+    for (size_t i = 0; i < demo::main_menu.size(); i++)
+        list.push_back("[ " + std::to_string(i + 1) + " ] " + demo::main_menu[i]);
+
+
+    for(int i =0;i<10;i++)
+{
+std::ostringstream os;
+ans::IntRGB255 fgColor(ans::get_random_number(150,240), ans::get_random_number(160,240),  ans::get_random_number(175,245));
+ans::IntRGB255 bgColor(ans::get_random_number(10,50), ans::get_random_number(15,65),  ans::get_random_number(20,80));
+ans::IntRGB255 aColor(ans::get_random_number(160,250), ans::get_random_number(180,245),  ans::get_random_number(200,250));
+    cls();
+       os
+            << str::cls()
+            << str::translate(
+                   str::box(" Cornatui |> Developed By  A  n  a  s  R  i  e  m  a  n  n ", Border::bold,
+                            fgColor, bgColor, aColor, 0)
+                       + str::fg_color(fgColor)
+                       + str::table(list, Border::cross, fgColor, bgColor, aColor )
+                       + str::fg_color(aColor)
+                       + str::hr(80, "=", 2)
+                       + str::fg_color(fgColor)
+                       + " # Select option [1-7] , to exit [0] |> option -> ",
+                   2, 1);
+            
+                   std::cout<<os.str()<<std::flush;
+                          delay_ms(75);
+}
     demo::run();
     return 0;
 }
@@ -91,19 +124,27 @@ void run()
 
     while (true)
     {
+display_cursor(false);
+
+ans::IntRGB255 fgColor(ans::get_random_number(150,240), ans::get_random_number(160,240),  ans::get_random_number(175,245));
+ans::IntRGB255 bgColor(fgColor.inverse().darkness(2));
+ans::IntRGB255 aColor(fgColor.inverse().brightness(3));
+    cls();
         std::cout
             << str::cls()
             << str::translate(
-                   str::box(" cornatui |> Feature Demo & Library Info ", Border::bold,
-                            theme::text_color, theme::bg_color, theme::accent_color, 0)
-                       + str::fg_color(theme::text_color)
-                       + str::table(list, Border::cross, theme::text_color, theme::bg_color, theme::accent_color)
-                       + str::fg_color(theme::accent_color)
+                   str::box(" Cornatui |> Developed By  A  n  a  s  R  i  e  m  a  n  n ", Border::bold,
+                            fgColor, bgColor, aColor, 0)
+                       + str::fg_color(fgColor)
+                       + str::table(list, Border::mix, fgColor, bgColor, aColor,1)
+                       + str::fg_color(aColor)
                        + str::hr(80, "=", 2)
-                       + str::fg_color(theme::text_color)
+                       + str::fg_color(fgColor)
                        + " # Select option [1-7] , to exit [0] |> option -> ",
                    2, 1);
+                   delay_ms(75);
 
+display_cursor(true);
         std::cin >> option;
         std::cout << str::reset();
 
@@ -122,34 +163,45 @@ void run()
 
 void colors()
 {
-    header("Colors  [ 16 named ]  ( str::fg_color(1-16) )");
+    std::ostringstream os255fg,os255bg,osRGB;
+    header("Colors  [ 255 named ] ( str::fg_color(1-255) )");
 
-    for (unsigned int i = 1; i <= 16; i++)
+    for (unsigned int i = 0; i < 256; i++)
     { 
 
-    std::cout << str::fg_color(i) << " #" << std::setfill('0') << std::setw(2) << i << " " << str::reset();
-    if((i)%8==0)std::cout<<str::br();
+    os255fg << str::fg_color(i) << " #" << std::setfill('0') << std::setw(3) << i << " " << str::reset();
+    if((i+1)%8==0)os255fg<<str::br();
     } 
+    std::cout<<os255fg.str();
     footer();
 
-    header("Colors  [ 256 palette ]  ( str::fg_color(17-255) )");
-    std::cout << "  ";
-    for (unsigned int i = 17; i < 256; i++)
-    {
-        std::cout << str::fg_color(i) << " #" << std::setfill('0') << std::setw(3) << i << " " << str::reset();
-        if ((i - 16) % 12 == 0) std::cout << "\n  ";
-    }
-    std::cout<<str::br();
+    header("Colors  [ 255 named ] ( str::bg_color(1-255) )");
+
+    for (unsigned int i = 0; i < 256; i++)
+    { 
+
+    os255bg << str::bg_color(i) << " #" << std::setfill('0') << std::setw(3) << i << " " << str::reset();
+    if((i+1)%8==0)os255bg<<str::br();
+    } 
+    std::cout<<os255bg.str();
     footer();
+
+
+
+  
+
+   
 
     header("Colors  [ True RGB ]  ( str::fg_color(r,g,b) / str::bg_color(r,g,b) )");
     std::cout << "  ";
-    for (int i = 0; i < 256; i += 8)
+    for (int i = 0; i < 256; i++)
     {
-        std::cout << str::fg_color(255 - i, i, 128) << str::bg_color(i, 40, 255 - i) << " ## " << str::reset();
-        if ((i + 8) % 64 == 0) std::cout << "\n  ";
+        osRGB<< str::fg_color(255 - i, i, 128) << str::bg_color(i, 40, 255 - i) << " ## "<< str::reset();
+        if ((i) % 17 == 0) osRGB << "\n  " ;
     }
 
+
+    std::cout<<osRGB.str() << str::reset();
     footer();
 
     header("Colors  [ ans::IntRGB255 ]  -  a clamped 0-255 RGB value type");
@@ -207,9 +259,9 @@ void boxes_tables_menus()
     std::cout << str::ordered_menu("Example Menu", items)<<str::br(3);
     footer();
 
-    header("2D variant  ( str::ordered_list on a vector<vector<string>> )");
+    header("2D variant  ( str::ordered_menu_list on a vector<vector<string>> )");
     std::vector<std::vector<std::string>> grid = {{"A1", "A2"}, {"B1", "B2"}};
-    std::cout << str::ordered_list(grid) << "\n";
+    std::cout << str::ordered_menu_list(grid) << "\n";
     footer();
 }
 
@@ -242,7 +294,7 @@ void text_effects()
         "bg_colorful()        -> " + message.bg_colorful(),
     };
 
-    std::cout << str::unordered_list(rows);
+    std::cout << str::unordered_menu_list(rows);
     footer();
 }
 
@@ -314,11 +366,11 @@ void string_utilities()
         "ignore_character(input, 'l')   -> [" + str::ignore_character(sample, 'l') + "]",
         "get_ascii_only(input)          -> [" + str::get_ascii_only(sample) + "]",
         "validate_box_content(input)    -> [" + str::validate_box_content(sample) + "]",
-        "edit_precision(3.14159L, 2, 6) -> [" + str::edit_precision(3.14159L, 2, 6) + "]",
+        "format_number(3.14159L, 2, 6) -> [" + str::format_number(3.14159L, 4) + "]",
         "Text::merge({...})             -> [" + Text::merge({"Hello, ", "this ", "is ", "merged."}) + "]",
     };
 
-    std::cout << str::unordered_list(rows);
+    std::cout << str::unordered_menu_list(rows);
     footer();
 }
 
@@ -329,7 +381,7 @@ namespace info
 
 constexpr const char *Name       = "cornatui";
 constexpr const char *NameOrigin = "C++ ornament text user interface";
-constexpr const char *Version    = "0.0.3";
+constexpr const char *Version    = "0.3.7";
 constexpr const char *Author     = "Anas Riemann";
 constexpr const char *Repository = "https://github.com/AnasRiemann/cornatui-lib";
 constexpr const char *License    = "MIT";
@@ -427,9 +479,9 @@ void menu()
         std::cout
             << str::cls()
             << str::translate(
-                   str::box(" INFO ", Border::bold, theme::text_color, theme::bg_color, theme::accent_color, 0)
+                  str::translate( str::box(" INFO ", Border::bold, theme::text_color, theme::bg_color, theme::accent_color, 1),8, 1)
                        + str::fg_color(theme::text_color)
-                       + str::table(list, Border::cross, theme::text_color, theme::bg_color, theme::accent_color)
+                       + str::table(list, Border::cross, theme::text_color, theme::bg_color, theme::accent_color,2)
                        + str::fg_color(theme::accent_color)
                        + str::hr(80, "=", 2)
                        + str::fg_color(theme::text_color)
