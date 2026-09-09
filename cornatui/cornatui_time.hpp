@@ -1,18 +1,9 @@
+#ifndef CORNATUI_TIME_HPP
+#define CORNATUI_TIME_HPP
 
-#ifndef CORNATUI
-#define CORNATUI
-
-
-
-#include "cornatui_math_utilities_ans.hpp"
-#include "cornatui_time.hpp"
-#include "cornatui_io.hpp"
-#include "cornatui_sound.hpp"
-
-#include "cornatui_color.hpp"
-#include "cornatui_text.hpp"
-#include "cornatui_table.hpp"
-#include "cornatui_page.hpp"
+#include <chrono>
+#include <thread>
+#include <stdexcept>
 
 
 
@@ -41,5 +32,18 @@
 */
 
 
+namespace tui
+{
 
-#endif
+namespace time
+{
+
+inline void delay_ms(unsigned int ms){if (ms > 0){std::this_thread::sleep_for(std::chrono::milliseconds(ms));}}
+
+
+}
+
+}
+
+
+#endif // CORNATUI_TIME_HPP

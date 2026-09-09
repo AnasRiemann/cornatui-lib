@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <vector>
-
+#include<stdexcept>
 #include <algorithm>
 #include <string>
 #include <iostream>
@@ -14,19 +14,8 @@
 
 #include <cctype>
 
-
-#if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
-
-#include <windows.h>
-#include <conio.h>
-
-#endif
-
-
-
-#include "cornatui_math_ans.hpp"
+#include "cornatui_math_utilities_ans.hpp"
 #include "cornatui_color.hpp"
-
 
 
 /*
@@ -56,27 +45,7 @@
 namespace tui
 {
 
-        enum class Screen : int
-    {
-        off = 0,
-        view = 1,
-        full = 2
-    };
 
-
-
-
-    inline void delay_ms(unsigned int ms)
-    {
-        if (ms > 0)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-        }
-    }
-
-    
-
-    
     enum class Method : int
     {
         padding = 0,
@@ -98,20 +67,27 @@ namespace tui
         inline std::string ltrim(const std::string &text);
         inline std::string rtrim(const std::string &text);
         inline std::string trim(const std::string &text);
-        inline std::string format_number(long double val, int decimal_precision = 5, bool trim_trailing_zeros = true, bool auto_scientific = false);
-        inline std::string separate(const std::string &text, const unsigned int space_length = 1);
-        inline std::string translate(const std::string &content, const size_t x, const size_t y, Method translation_method = Method::padding);
 
+        inline std::string separate(const std::string &text, const unsigned int space_length = 1);
+
+        template <typename T>
+        inline std::string to_scientific(T val, const unsigned int precision);
+        template <typename T>
+        inline std::string to_fixed_trimmed(T val, int precision);
+
+
+
+        inline std::string center(const std::string &text, size_t width, const char fill = ' ');
+        inline std::string truncate(const std::string &text, size_t maxLength, const std::string &ellipsis = "...");
+        
+        inline std::string translate(const std::string &content, const size_t x, const size_t y, Method translation_method = Method::padding);
         inline std::string br(const size_t numberOfLines = 1, Method translation_method = Method::padding);
         inline std::string space(const size_t width, Method translation_method = Method::padding);
 
         inline std::string hr(const size_t width = 80, const char style = '-');
         inline std::string hr(const size_t width, const std::string &style, const size_t numberOfLines = 1);
-
         inline std::string line(const size_t width, const char style);
         inline std::string line(const size_t width, const std::string &style);
-        inline std::string cls(Screen mode = Screen::full);
-       
 
     }
 
@@ -121,12 +97,11 @@ namespace tui
         inline std::string ignore_character(const std::string &input, const char character)
         {
             std::string result;
-
-            for (size_t i = 0; i < input.length(); i++)
+            for (unsigned char c : input)
             {
-                if (input[i] != character)
+                if (c != character)
                 {
-                    result.push_back(input[i]);
+                    result.push_back(c);
                 }
             }
             return result;
@@ -169,15 +144,14 @@ namespace tui
                 return "";
             return ltrim(rtrim(text));
         }
+
         inline std::string validate_box_content(const std::string &input)
         {
             std::string filtered;
             filtered.reserve(input.size());
 
-            for (size_t i = 0; i < input.length(); i++)
+            for (unsigned char c : input)
             {
-                unsigned char c = static_cast<unsigned char>(input.at(i));
-
                 if (c > 31 && c < 127)
                 {
                     filtered.push_back(static_cast<char>(c));
@@ -189,8 +163,7 @@ namespace tui
         inline std::string lowercase(const std::string &text)
         {
             std::string result = text;
-            std::transform(result.begin(), result.end(), result.begin(),
-                           [](unsigned char c)
+            std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c)
                            { return std::tolower(c); });
             return result;
         }
@@ -198,8 +171,7 @@ namespace tui
         inline std::string uppercase(const std::string &text)
         {
             std::string result = text;
-            std::transform(result.begin(), result.end(), result.begin(),
-                           [](unsigned char c)
+            std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c)
                            { return std::toupper(c); });
             return result;
         }
@@ -213,47 +185,58 @@ namespace tui
 
         inline std::string separate(const std::string &text, const unsigned int space_length)
         {
+            if (text.empty())return "";
+
             std::ostringstream os;
             std::string cleaned = trim(text);
-            os << cleaned[0];
-            for (size_t i = 1; i < cleaned.length(); i++)
-            {
-                os << std::string(space_length, ' ') << cleaned[i];
-            }
-            return os.str();
+            for (unsigned char c : cleaned) {os << c << std::string(space_length, ' ');}
+            return rtrim(os.str());
         }
 
-        inline std::string format_number(long double val, int decimal_precision, bool trim_trailing_zeros, bool auto_scientific)
+        template <typename T>
+        inline std::string to_scientific(T val, const unsigned int precision)
         {
             std::ostringstream oss;
+            oss << std::scientific << std::setprecision(precision) << val;
+            return oss.str();
+        }
 
-            if (auto_scientific && val != 0.0L)
-            {
-                long double absVal = std::fabs(val);
-                if (absVal >= 1e15L || absVal < 1e-9L)
-                {
-                    oss << std::scientific << std::setprecision(7) << val;
-                    return oss.str();
-                }
-            }
-
-            oss << std::fixed << std::setprecision(decimal_precision) << val;
+        template <typename T>
+        inline std::string to_fixed_trimmed(T val, int precision)
+        {
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(precision) << val;
             std::string s = oss.str();
-
-            if (trim_trailing_zeros && s.find('.') != std::string::npos)
+            if (s.find('.') != std::string::npos)
             {
-                size_t lastNonZero = s.find_last_not_of('0');
-                if (s[lastNonZero] == '.')
-                    lastNonZero--;
-                s.erase(lastNonZero + 1);
+            size_t lastNonZero = s.find_last_not_of('0');if (s[lastNonZero] == '.')lastNonZero--;s.erase(lastNonZero + 1);
             }
-
-            if (s == "-0")
-                s = "0";
-
+            if (s == "-0")s = "0";
             return s;
         }
 
+
+        inline std::string center(const std::string &text, size_t width, const char fill)
+        {
+            std::string validText = get_ascii_only(text); 
+            if (validText.length() >= width)
+                return validText;
+            size_t totalPad = width - validText.length();
+            size_t left = totalPad / 2;
+            return std::string(left, fill) + validText + std::string(totalPad - left, fill);
+        }
+
+        inline std::string truncate(const std::string &text, size_t maxLength, const std::string &ellipsis)
+        {
+            std::string validText = get_ascii_only(text);
+            if (validText.length() <= maxLength)
+                return validText;
+            if (maxLength <= ellipsis.length())
+                return validText.substr(0, maxLength);
+            return validText.substr(0, maxLength - ellipsis.length()) + ellipsis;
+        }
+
+        
         inline std::string translate(const std::string &content, const size_t x, const size_t y, Method translation_method)
         {
 
@@ -364,28 +347,6 @@ namespace tui
         inline std::string hr(const size_t width, const std::string &style, const size_t numberOfLines) { return "\n" + line(width, style) + std::string(numberOfLines, '\n'); }
 
 
-
-        
-        inline std::string cls(Screen mode)
-        {
-            if (mode == Screen::off)
-                return "";
-            switch (mode)
-            {
-            case Screen::view:
-                return "\033[2J\033[H";
-                break;
-            case Screen::full:
-                return "\033[2J\033[3J\033[H";
-                break;
-            default:
-                return "";
-                break;
-            }
-        }
-
-
-
     }
 
     class Text
@@ -393,18 +354,23 @@ namespace tui
     private:
         std::string content_;
 
-        inline void get_ascii_only(const std::string &input)
+        inline void get_ascii_only(const std::string &input) { content_ = str::get_ascii_only(input); }
+
+        inline std::string initialize_ansi_effects(const std::string &ansi_code, const std::string &content) const
         {
-            std::string filtered;
-            for (unsigned char c : input)
-            {
-                if (c < 128)
-                    filtered.push_back(c);
-            }
-            content_ = filtered;
+            std::string result;
+            result.reserve(ansi_code.length() + content.length() + str::reset.length());
+
+            result += ansi_code;
+            result += content;
+            result += std::string(str::reset);
+
+            return result;
         }
 
     public:
+
+
         Text(const std::string &input) { get_ascii_only(input); }
 
         const std::string &content() const { return content_; }
@@ -417,259 +383,72 @@ namespace tui
 
         friend inline std::istream &operator>>(std::istream &read, Text &input)
         {
-
             read >> input.content_;
             input.get_ascii_only(input.content_);
             return read;
         }
 
-        inline std::string color(const unsigned int colorIndex) const
-        {
-            if (colorIndex < 256)
-            {
-                return str::fg_color(colorIndex) + content() + str::reset();
-            }
-            return "";
-        }
-        inline std::string bg_color(const unsigned int colorIndex) const
-        {
-            if (colorIndex < 256)
-            {
-                return str::bg_color(colorIndex) + content() + str::reset();
-            }
-            return "";
-        }
+        inline std::string color(const ans::IntRGB255 &colorIndex) const { return initialize_ansi_effects(str::fg_color(colorIndex), content()); }
+        inline std::string bg_color(const ans::IntRGB255 &colorIndex) const { return initialize_ansi_effects(str::bg_color(colorIndex), content()); }
+        inline std::string color(const unsigned int &colorIndex) const { return initialize_ansi_effects(str::fg_color(colorIndex), content()); }
+        inline std::string bg_color(const unsigned int &colorIndex) const { return initialize_ansi_effects(str::bg_color(colorIndex), content()); }
 
-        inline std::string colorful(int start = 1, int end = 256) const
+        inline std::string colorful(unsigned int start = 0, unsigned int end = 255, bool enableRGB = true) const
         {
-
+            auto fgColor = [&]()
+            { return ((enableRGB) ? str::fg_color(ans::IntRGB255(ans::get_random_number(start, end), ans::get_random_number(start, end), ans::get_random_number(start, end))) : str::fg_color(ans::get_random_number(start, end))); };
             std::ostringstream colorfulText;
-            for (size_t C = 0; C < content().length(); C++)
+            for (unsigned char c : content())
             {
-                colorfulText << str::fg_color(ans::get_random_number(start, end), ans::get_random_number(start, end), ans::get_random_number(start, end)) << content()[C] << "\033[0m";
+                colorfulText << fgColor() << c << std::string(str::reset);
             }
             return colorfulText.str();
         }
 
-        inline std::string bg_colorful(int start = 1, int end = 256) const
+        inline std::string bg_colorful(unsigned int start = 0, unsigned int end = 255, bool enableRGB = true) const
         {
-
+            auto bgColor = [&]()
+            { return ((enableRGB) ? str::bg_color(ans::IntRGB255(ans::get_random_number(start, end), ans::get_random_number(start, end), ans::get_random_number(start, end))) : str::bg_color(ans::get_random_number(start, end))); };
             std::ostringstream colorfulText;
-            for (size_t C = 0; C < content().length(); C++)
+            for (unsigned char c : content())
             {
-                colorfulText << str::bg_color(ans::get_random_number(start, end), ans::get_random_number(start, end), ans::get_random_number(start, end)) << content()[C] << "\033[0m";
+                colorfulText << bgColor() << c << std::string(str::reset);
             }
             return colorfulText.str();
         }
 
-        inline std::string bold() const { return str::bold() + content() + str::reset(); }
-        inline std::string dim() const { return str::dim() + content() + str::reset(); }
-        inline std::string italic() const { return str::italic() + content() + str::reset(); }
-        inline std::string underline() const { return str::underline() + content() + str::reset(); }
-        inline std::string blink() const { return str::blink() + content() + str::reset(); }
-        inline std::string rblink() const { return str::rblink() + content() + str::reset(); }
-        inline std::string reversed() const { return str::reversed() + content() + str::reset(); }
-        inline std::string conceal() const { return str::conceal() + content() + str::reset(); }
-        inline std::string crossed() const { return str::crossed() + content() + str::reset(); }
-        inline std::string double_underline() const { return str::double_underline() + content() + str::reset(); }
-        inline std::string curly_underline() const { return str::curly_underline() + content() + str::reset(); }
-        inline std::string overline() const { return str::overline() + content() + str::reset(); }
+        inline std::string bold() const { return initialize_ansi_effects(std::string(str::bold), content()); }
+        inline std::string dim() const { return initialize_ansi_effects(std::string(str::dim), content()); }
+        inline std::string italic() const { return initialize_ansi_effects(std::string(str::italic), content()); }
+        inline std::string underline() const { return initialize_ansi_effects(std::string(str::underline), content()); }
+        inline std::string blink() const { return initialize_ansi_effects(std::string(str::blink), content()); }
+        inline std::string rblink() const { return initialize_ansi_effects(std::string(str::rblink), content()); }
+        inline std::string reversed() const { return initialize_ansi_effects(std::string(str::reversed), content()); }
+        inline std::string conceal() const { return initialize_ansi_effects(std::string(str::conceal), content()); }
+        inline std::string crossed() const { return initialize_ansi_effects(std::string(str::crossed), content()); }
+        inline std::string double_underline() const { return initialize_ansi_effects(std::string(str::double_underline), content()); }
+        inline std::string curly_underline() const { return initialize_ansi_effects(std::string(str::curly_underline), content()); }
+        inline std::string overline() const { return initialize_ansi_effects(std::string(str::overline), content()); }
 
-        inline std::string lowercase() const
-        {
-            std::string result = content();
-            for (size_t i = 0; i < result.length(); i++)
-            {
-                if (result[i] >= 'A' && result[i] <= 'Z')
-                {
-                    result[i] = result[i] + ('a' - 'A');
-                }
-            }
-            return result;
-        }
-
-        inline std::string uppercase() const
-        {
-            std::string result = content();
-            for (size_t i = 0; i < result.length(); i++)
-            {
-                if (result[i] >= 'a' && result[i] <= 'z')
-                {
-                    result[i] = result[i] - ('a' - 'A');
-                }
-            }
-            return result;
-        }
-
-        inline std::string reverse() const
-        {
-            std::string result_Text = content();
-            for (size_t i = 0; i < content().length(); i++)
-            {
-                result_Text[i] = content()[content().length() - (i + 1)];
-            }
-            return result_Text;
-        }
-
-        inline std::string separate(const unsigned int space_length) const { return str::separate(content(), space_length); }
-
-        inline void write(const unsigned int duration = 50, std::ostream &print = std::cout) const
-        {
-            for (size_t i = 0; i < content().length(); i++)
-            {
-                print << content()[i];
-                print.flush();
-                delay_ms(duration);
-            }
-        }
-
-        inline void write_colorful(const unsigned int time = 50, const int start = 1, const int end = 255) const
-        {
-            for (size_t i = 0; i < content().length(); i++)
-            {
-                std::cout << str::fg_color(ans::get_random_number(start, end), ans::get_random_number(start, end), ans::get_random_number(start, end)) << content()[i] << "\033[0m";
-                std::cout.flush();
-                delay_ms(time);
-            }
-        }
+        inline Text lowercase() const { return Text(str::lowercase(content())); }
+        inline Text uppercase() const { return Text(str::uppercase(content())); }
+        inline Text reverse() const { return Text(str::reverse(content())); }
+        inline Text separate(const unsigned int padding) const { return Text(str::separate(content(), padding)); }
 
         static std::string merge(const std::vector<std::string> &paragraph)
         {
-            if (paragraph.empty())
-                return " ";
-            std::ostringstream os;
+            if (paragraph.empty())throw std::invalid_argument("The vector is empty");
 
-            for (size_t i = 0; i < paragraph.size(); i++)
-            {
-                os << paragraph[i];
-            }
+            std::ostringstream os;
+            for (const std::string &word : paragraph){os << word;}
             return os.str();
         }
+
+
     };
 
 
-
-
-#if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
-
-    inline void pause(const std::string &message = " Press any Key to continue...", unsigned int duration = 50)
-    {
-        for (size_t i = 0; i < message.length(); i++)
-        {
-            std::cout << message[i];
-            std::cout.flush();
-            delay_ms(duration);
-        }
-
-        HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
-
-        if (hInput != INVALID_HANDLE_VALUE && hInput != NULL)
-        {
-            FlushConsoleInputBuffer(hInput);
-        }
-
-        _getch();
-    }
-
-    namespace detail
-    {
-        inline HANDLE console_output_handle(const std::ostream &print) noexcept
-        {
-            if (&print == &std::cerr || &print == &std::clog)
-            {
-                return GetStdHandle(STD_ERROR_HANDLE);
-            }
-            return GetStdHandle(STD_OUTPUT_HANDLE);
-        }
-    }
-
-    inline void display_cursor(bool show = true, std::ostream &print = std::cout)
-    {
-
-        HANDLE hConsole = detail::console_output_handle(print);
-        CONSOLE_CURSOR_INFO cursorInfo;
-        if (hConsole != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hConsole, &cursorInfo))
-        {
-            cursorInfo.bVisible = show;
-            SetConsoleCursorInfo(hConsole, &cursorInfo);
-            return;
-        }
-    }
-
-    inline void cls(Screen mode = Screen::full, std::ostream &print = std::cout)
-    {
-        if (mode == Screen::off)
-        {
-            return;
-        }
-
-        print << str::cls(mode);
-        HANDLE hConsole = detail::console_output_handle(print);
-        CONSOLE_SCREEN_BUFFER_INFO csbi;
-        if (hConsole != INVALID_HANDLE_VALUE && GetConsoleScreenBufferInfo(hConsole, &csbi))
-        {
-            const DWORD cellCount = static_cast<DWORD>(csbi.dwSize.X) * static_cast<DWORD>(csbi.dwSize.Y);
-            const COORD home = {0, 0};
-            DWORD written;
-            FillConsoleOutputCharacter(hConsole, ' ', cellCount, home, &written);
-            FillConsoleOutputAttribute(hConsole, csbi.wAttributes, cellCount, home, &written);
-            SetConsoleCursorPosition(hConsole, home);
-            return;
-        }
-    }
-
-#else
-
-    inline void pause(const std::string &message = " Press [ENTER] to continue...", int duration = 50)
-    {
-        for (size_t i = 0; i < message.length(); i++)
-        {
-            std::cout << message[i];
-            std::cout.flush();
-            delay_ms(duration);
-        }
-        std::cin.clear();
-        std::cin.sync();
-        std::cin.get();
-    }
-
-    inline void display_cursor(bool show = true, std::ostream &print = std::cout)
-    {
-        if (show)
-        {
-            print << "\033[?25h";
-        }
-        else
-        {
-            print << "\033[?25l";
-        }
-    }
-
-    inline void cls(Screen mode = Screen::full, std::ostream &print = std::cout)
-    {
-        if (mode == Screen::off)
-        {
-            return;
-        }
-        switch (mode)
-        {
-        case Screen::view:
-            print << str::cls(Screen::view) << std::flush;
-            break;
-        case Screen::full:
-            print << str::cls(Screen::full) << std::flush;
-            break;
-        default:
-            break;
-        }
-    }
-
-#endif
-
-
-
-
-
+  
 
 }
 

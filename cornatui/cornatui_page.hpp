@@ -2,22 +2,18 @@
 #ifndef CORNATUI_PAGE
 #define CORNATUI_PAGE
 
-
 #include <vector>
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <stdexcept>
 
 
-
-#include "cornatui_math_ans.hpp"
+#include "cornatui_math_utilities_ans.hpp"
 #include "cornatui_color.hpp"
 #include "cornatui_text.hpp"
 #include "cornatui_table.hpp"
-
-
-
 
 /*
 
@@ -46,8 +42,6 @@
 namespace tui
 {
 
-  
-
     enum class Page : int
     {
         list = 0,
@@ -56,31 +50,29 @@ namespace tui
 
     };
 
-
-
     namespace str
     {
-
+         
         inline std::string ordered_menu_list(const std::vector<std::string> &Element);
         inline std::string unordered_menu_list(const std::vector<std::string> &Element);
         inline std::string ordered_menu(const std::string &header, const std::vector<std::string> &Element);
 
         inline std::string unordered_menu_list(const std::vector<std::vector<std::string>> &Element);
         inline std::string ordered_menu_list(const std::vector<std::vector<std::string>> &Element);
+        
         inline std::string ordered_menu(const std::string &header, const std::vector<std::vector<std::string>> &Element);
 
+        inline std::vector<std::string> prefix_each(const std::vector<std::string> &list, const std::function<std::string(unsigned int)> &prefix = [](unsigned int i){ return "[ " + std::to_string(i + 1) + " ] "; });
+        template <typename T>
+        inline std::string join(const std::vector<T> &elements, const std::function<std::string(const T &element)> &formatter);
     }
-
-
 
     namespace str
     {
 
-   
+    
 
-
-
-
+        
         inline std::string ordered_menu_list(const std::vector<std::string> &Element)
         {
             std::ostringstream out;
@@ -235,14 +227,32 @@ namespace tui
         }
 
 
+
+
+
+        inline std::vector<std::string> prefix_each(const std::vector<std::string> &list, const std::function<std::string(unsigned int)> &prefix)
+        {
+            if (list.empty())
+                throw std::invalid_argument("Error: vector is empty");
+            std::vector<std::string> result;
+            result.reserve(list.size());
+            for (size_t i = 0; i < list.size(); ++i)
+                result.push_back(prefix(static_cast<unsigned int>(i)) + list.at(i));
+            return result;
+        }
+
+        template <typename T>
+        inline std::string join(const std::vector<T> &elements, const std::function<std::string(const T &element)> &formatter)
+        {
+            if (elements.empty())throw std::invalid_argument("Error: vector is empty");
+            std::ostringstream stream;
+            for (const T &element : elements){stream << formatter(element);}
+            return stream.str();
+        }
+
+        
+
     } // namespace str
-
-
-
-
-
-    
-
 
 } // namespace tui
 

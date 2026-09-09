@@ -4,13 +4,12 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <stdexcept>
 
 
-#include "cornatui_math_ans.hpp"
+#include "cornatui_math_utilities_ans.hpp"
 #include "cornatui_color.hpp"
 #include "cornatui_text.hpp"
-
-
 
 /*
 
@@ -36,7 +35,6 @@
 
 */
 
-
 namespace tui
 {
 
@@ -49,7 +47,8 @@ namespace tui
         cross = 5,
         wave = 6,
         mix = 7,
-        zero = 8
+        bubble = 8,
+        retro = 9,
     };
 
     struct BorderStyle
@@ -82,10 +81,12 @@ namespace tui
                 return BorderStyle("|=", "=|", "+", "-");
             case Border::wave:
                 return BorderStyle("~", "~", "~", "~");
-                case Border::mix:
-                return BorderStyle("(#|", "|#)", "=", "~");
-                  case Border::zero:
+            case Border::mix:
+                return BorderStyle("(#|", "|#)", "=", "-~");
+            case Border::bubble:
                 return BorderStyle("|0|", "|0|", "o", "o");
+            case Border::retro:
+                return BorderStyle("|@|", "|@|", "&", "$");
             default:
                 return BorderStyle("|", "|", "-", "-");
             }
@@ -101,8 +102,8 @@ namespace tui
     {
 
         inline std::string box(const std::string &abc, Border style = Border::single, const size_t padding = 0);
-        inline std::string box(const std::string &abc, Border style, const ans::IntRGB255 &textColor, const ans::IntRGB255 &bgColor, const ans::IntRGB255 &borderColor, const size_t padding=0);
-              inline std::string box(const std::string &abc, Border style,  const unsigned int textColor,  const unsigned int bgColor,  const unsigned int borderColor, const size_t padding=0);
+        inline std::string box(const std::string &abc, Border style, const ans::IntRGB255 &textColor, const ans::IntRGB255 &bgColor, const ans::IntRGB255 &borderColor, const size_t padding = 0);
+        inline std::string box(const std::string &abc, Border style, const unsigned int textColor, const unsigned int bgColor, const unsigned int borderColor, const size_t padding = 0);
         inline std::string table(const std::vector<std::string> &text, Border style, const ans::IntRGB255 &textColor, const ans::IntRGB255 &bgColor, const ans::IntRGB255 &borderColor, const size_t padding = 0);
 
         inline std::string table(const std::vector<std::string> &text, Border style, const unsigned int textColor, const unsigned int bgColor, const unsigned int borderColor, const size_t padding = 0);
@@ -143,9 +144,6 @@ namespace tui
             return os.str();
         }
 
-
-
-
         inline std::string box(const std::string &abc, Border style, const ans::IntRGB255 &textColor, const ans::IntRGB255 &bgColor, const ans::IntRGB255 &borderColor, const size_t padding)
         {
             std::string content = validate_box_content(abc);
@@ -160,32 +158,30 @@ namespace tui
 
             std::string wallColor = fg_color(borderColor);
             std::string fill = fg_color(textColor) + bg_color(bgColor);
-            std::string hrLine = wallColor + line(length, hrChar) + br() + reset();
+            std::string hrLine = wallColor + line(length, hrChar) + br() + std::string(str::reset);
 
             std::ostringstream os;
             os << br() << hrLine;
 
             for (size_t i = 0; i < padding; i++)
-                os << wallColor << leftBorder << reset() << fill
-                   << std::string(innerWidth, ' ') << reset()
-                   << wallColor << rightBorder << reset() << "\n";
+                os << wallColor << leftBorder << std::string(str::reset) << fill
+                   << std::string(innerWidth, ' ') << std::string(str::reset)
+                   << wallColor << rightBorder << std::string(str::reset) << "\n";
 
-            os << wallColor << leftBorder << reset()
-               << fill << " " << std::string(padding, ' ') << content << std::string(padding, ' ') << " " << reset()
-               << wallColor << rightBorder << reset() << "\n";
+            os << wallColor << leftBorder << std::string(str::reset)
+               << fill << " " << std::string(padding, ' ') << content << std::string(padding, ' ') << " " << std::string(str::reset)
+               << wallColor << rightBorder << std::string(str::reset) << "\n";
 
             for (size_t i = 0; i < padding; i++)
-                os << wallColor << leftBorder << reset() << fill
-                   << std::string(innerWidth, ' ') << reset()
-                   << wallColor << rightBorder << reset() << "\n";
+                os << wallColor << leftBorder << std::string(str::reset) << fill
+                   << std::string(innerWidth, ' ') << std::string(str::reset)
+                   << wallColor << rightBorder << std::string(str::reset) << "\n";
 
             os << hrLine;
             return os.str();
         }
 
-        
-
-        inline std::string box(const std::string &abc, Border style,  const unsigned int textColor,  const unsigned int bgColor,  const unsigned int borderColor, const size_t padding)
+        inline std::string box(const std::string &abc, Border style, const unsigned int textColor, const unsigned int bgColor, const unsigned int borderColor, const size_t padding)
         {
             std::string content = validate_box_content(abc);
             BorderStyle wall = BorderStyle::wall(style);
@@ -199,39 +195,29 @@ namespace tui
 
             std::string wallColor = fg_color(borderColor);
             std::string fill = fg_color(textColor) + bg_color(bgColor);
-            std::string hrLine = wallColor + line(length, hrChar) + br() + reset();
+            std::string hrLine = wallColor + line(length, hrChar) + br() + std::string(str::reset);
 
             std::ostringstream os;
             os << br() << hrLine;
 
             for (size_t i = 0; i < padding; i++)
-                os << wallColor << leftBorder << reset() << fill
-                   << std::string(innerWidth, ' ') << reset()
-                   << wallColor << rightBorder << reset() << "\n";
+                os << wallColor << leftBorder << std::string(str::reset) << fill
+                   << std::string(innerWidth, ' ') << std::string(str::reset)
+                   << wallColor << rightBorder << std::string(str::reset) << "\n";
 
-            os << wallColor << leftBorder << reset()
-               << fill << " " << std::string(padding, ' ') << content << std::string(padding, ' ') << " " << reset()
-               << wallColor << rightBorder << reset() << "\n";
+            os << wallColor << leftBorder << std::string(str::reset)
+               << fill << " " << std::string(padding, ' ') << content << std::string(padding, ' ') << " " << std::string(str::reset)
+               << wallColor << rightBorder << std::string(str::reset) << "\n";
 
             for (size_t i = 0; i < padding; i++)
-                os << wallColor << leftBorder << reset() << fill
-                   << std::string(innerWidth, ' ') << reset()
-                   << wallColor << rightBorder << reset() << "\n";
+                os << wallColor << leftBorder << std::string(str::reset) << fill
+                   << std::string(innerWidth, ' ') << std::string(str::reset)
+                   << wallColor << rightBorder << std::string(str::reset) << "\n";
 
             os << hrLine;
             return os.str();
         }
 
-
-
-
-
-
-
-
-
-
-       
         inline std::string table(const std::vector<std::string> &text, Border style, const ans::IntRGB255 &textColor, const ans::IntRGB255 &bgColor, const ans::IntRGB255 &borderColor, const size_t padding)
         {
             std::ostringstream os;
@@ -268,35 +254,33 @@ namespace tui
 
                 for (size_t j = 0; j < padding; j++)
                 {
-                    os << borderColorStr << wallLeft << reset()
+                    os << borderColorStr << wallLeft << std::string(str::reset)
                        << contentColorStr
                        << std::string(maxLength + 2 * padding + 2, ' ')
-                       << reset() << borderColorStr << wallRight << "\n";
+                       << std::string(str::reset) << borderColorStr << wallRight << "\n";
                 }
 
                 os << borderColorStr
                    << wallLeft << contentColorStr
                    << std::string(padding, ' ') << ' ' << validStr[i]
                    << std::string(maxLength - validStr[i].length(), ' ')
-                   << std::string(padding, ' ') << ' ' << reset()
+                   << std::string(padding, ' ') << ' ' << std::string(str::reset)
                    << borderColorStr
                    << wallRight;
 
                 for (size_t j = 0; j < padding; j++)
                 {
                     os << "\n"
-                       << borderColorStr << wallLeft << reset() << contentColorStr
+                       << borderColorStr << wallLeft << std::string(str::reset) << contentColorStr
                        << std::string(maxLength + 2 * padding + 2, ' ')
-                       << reset() << borderColorStr << wallRight;
+                       << std::string(str::reset) << borderColorStr << wallRight;
                 }
                 os << str::hr(length, (i + 1 < text.size()) ? innerChar : outerChar, 1);
             }
-            os << reset();
+            os << std::string(str::reset);
 
             return os.str();
         }
-
-
 
         inline std::string table(const std::vector<std::string> &text, Border style, const unsigned int textColor, const unsigned int bgColor, const unsigned int borderColor, const size_t padding)
         {
@@ -334,41 +318,35 @@ namespace tui
 
                 for (size_t j = 0; j < padding; j++)
                 {
-                    os << borderColorStr << wallLeft << reset()
+                    os << borderColorStr << wallLeft << std::string(str::reset)
                        << contentColorStr
                        << std::string(maxLength + 2 * padding + 2, ' ')
-                       << reset() << borderColorStr << wallRight << "\n";
+                       << std::string(str::reset) << borderColorStr << wallRight << "\n";
                 }
 
                 os << borderColorStr
                    << wallLeft << contentColorStr
                    << std::string(padding, ' ') << ' ' << validStr[i]
                    << std::string(maxLength - validStr[i].length(), ' ')
-                   << std::string(padding, ' ') << ' ' << reset()
+                   << std::string(padding, ' ') << ' ' << std::string(str::reset)
                    << borderColorStr
                    << wallRight;
 
                 for (size_t j = 0; j < padding; j++)
                 {
                     os << "\n"
-                       << borderColorStr << wallLeft << reset() << contentColorStr
+                       << borderColorStr << wallLeft << std::string(str::reset) << contentColorStr
                        << std::string(maxLength + 2 * padding + 2, ' ')
-                       << reset() << borderColorStr << wallRight;
+                       << std::string(str::reset) << borderColorStr << wallRight;
                 }
                 os << str::hr(length, (i + 1 < text.size()) ? innerChar : outerChar, 1);
             }
-            os << reset();
+            os << std::string(str::reset);
 
             return os.str();
         }
 
-
-
-
-
-
-
-        inline std::string table(const std::vector<std::string> &text, Border style,const size_t padding)
+        inline std::string table(const std::vector<std::string> &text, Border style, const size_t padding)
         {
             std::ostringstream os;
 
@@ -391,35 +369,33 @@ namespace tui
             std::string outerChar = wall.get_outer();
             std::string innerChar = wall.get_inner();
 
-
             size_t length = maxLength + wallLeft.length() + wallRight.length() + 2 * padding + 2;
 
-            os  << str::hr(length, outerChar, 1);
+            os << str::hr(length, outerChar, 1);
 
             for (size_t i = 0; i < text.size(); i++)
             {
-               
 
                 for (size_t j = 0; j < padding; j++)
                 {
-                    os << wallLeft << std::string(maxLength + 2 * padding + 2, ' ')<< wallRight << "\n";
+                    os << wallLeft << std::string(maxLength + 2 * padding + 2, ' ') << wallRight << "\n";
                 }
 
-                os 
-                   << wallLeft 
-                   << std::string(padding, ' ') << ' ' << validStr[i]
-                   << std::string(maxLength - validStr[i].length(), ' ')
-                   << std::string(padding, ' ') << ' ' << reset()
-                  
-                   << wallRight;
+                os
+                    << wallLeft
+                    << std::string(padding, ' ') << ' ' << validStr[i]
+                    << std::string(maxLength - validStr[i].length(), ' ')
+                    << std::string(padding, ' ') << ' ' << std::string(str::reset)
+
+                    << wallRight;
 
                 for (size_t j = 0; j < padding; j++)
                 {
-                os << "\n"<< wallLeft << std::string(maxLength + 2 * padding + 2, ' ')<< wallRight;
+                    os << "\n"
+                       << wallLeft << std::string(maxLength + 2 * padding + 2, ' ') << wallRight;
                 }
                 os << str::hr(length, (i + 1 < text.size()) ? innerChar : outerChar, 1);
             }
-         
 
             return os.str();
         }

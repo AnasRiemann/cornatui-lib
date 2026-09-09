@@ -1,18 +1,15 @@
+#ifndef CORNATUI_SOUND_HPP
+#define CORNATUI_SOUND_HPP
 
-#ifndef CORNATUI
-#define CORNATUI
+#include <iostream>
+#include <stdexcept>
 
+#if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
 
+#include <windows.h>
+#include <conio.h>
 
-#include "cornatui_math_utilities_ans.hpp"
-#include "cornatui_time.hpp"
-#include "cornatui_io.hpp"
-#include "cornatui_sound.hpp"
-
-#include "cornatui_color.hpp"
-#include "cornatui_text.hpp"
-#include "cornatui_table.hpp"
-#include "cornatui_page.hpp"
+#endif
 
 
 
@@ -42,4 +39,28 @@
 
 
 
+namespace tui
+{
+
+    namespace sound
+    {
+
+#if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
+
+        inline void beep(DWORD frequency = 1024, DWORD durationMS = 512);
+        inline void ring(std::ostream &print = std::cout);
+        inline void beep(DWORD frequency, DWORD durationMS) { Beep(frequency, durationMS); }
+        inline void ring(std::ostream &print) { print << '\a' << std::flush; }
+
+#else
+
+        inline void ring(std::ostream &print = std::cout);
+        inline void ring(std::ostream &print) { print << '\a' << std::flush; }
+
 #endif
+
+    }
+
+} // namespace tui
+
+#endif // CORNATUI_SOUND_HPP

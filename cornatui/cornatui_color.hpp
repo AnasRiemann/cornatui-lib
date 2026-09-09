@@ -1,15 +1,13 @@
 #ifndef CORNATUI_COLOR
 #define CORNATUI_COLOR
 
-
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <stdexcept>
 
-
-#include "cornatui_math_ans.hpp"
-
+#include "cornatui_math_utilities_ans.hpp"
 
 /*
 
@@ -18,21 +16,12 @@
 
 */
 
-
-
-
 #if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
 
 #include <windows.h>
-#include <conio.h>
 
 #endif
 
-#ifndef CORNATUI_DISABLE_RANG_DOT_HPP
-
-#include "rang.hpp"
-
-#endif
 
 
 /*
@@ -59,41 +48,36 @@
 
 */
 
-
 namespace tui
 {
 
+    namespace str
+    {
 
 
-   namespace str
-   {
-
-        inline std::string fg_color(const unsigned int r, const unsigned int g, const unsigned int b);
-        inline std::string bg_color(const unsigned int r, const unsigned int g, const unsigned int b);
         inline std::string fg_color(const ans::IntRGB255 &colorValue);
         inline std::string bg_color(const ans::IntRGB255 &colorValue);
         inline std::string fg_color(const unsigned int color);
         inline std::string bg_color(const unsigned int color);
-        inline std::string bold();
-        inline std::string dim();
-        inline std::string italic();
-        inline std::string underline();
-        inline std::string blink();
-        inline std::string rblink();
-        inline std::string reversed();
-        inline std::string conceal();
-        inline std::string crossed();
-        inline std::string double_underline();
-        inline std::string curly_underline();
-        inline std::string overline();
-        inline std::string reset();
 
-
-   }
-
+    }
 
     namespace str
     {
+
+        inline constexpr std::string_view bold = "\033[1m";
+        inline constexpr std::string_view dim = "\033[2m";
+        inline constexpr std::string_view italic = "\033[3m";
+        inline constexpr std::string_view underline = "\033[4m";
+        inline constexpr std::string_view blink = "\033[5m";
+        inline constexpr std::string_view rblink = "\033[6m";
+        inline constexpr std::string_view reversed = "\033[7m";
+        inline constexpr std::string_view conceal = "\033[8m";
+        inline constexpr std::string_view crossed = "\033[9m";
+        inline constexpr std::string_view double_underline = "\033[21m";
+        inline constexpr std::string_view curly_underline = "\033[4:3m";
+        inline constexpr std::string_view overline = "\033[53m";
+        inline constexpr std::string_view reset = "\033[0m";
 
         inline std::string fg_color(const unsigned int color)
         {
@@ -125,27 +109,6 @@ namespace tui
             return "";
         }
 
-        inline std::string fg_color(const unsigned int r, const unsigned int g, const unsigned int b)
-        {
-            if (r <= 255 && g <= 255 && b <= 255)
-            {
-                std::ostringstream fg;
-                fg << "\033[38;2;" << r << ";" << g << ";" << b << "m";
-                return fg.str();
-            }
-            return "";
-        }
-
-        inline std::string bg_color(const unsigned int r, const unsigned int g, const unsigned int b)
-        {
-            if (r <= 255 && g <= 255 && b <= 255)
-            {
-                std::ostringstream bg;
-                bg << "\033[48;2;" << r << ";" << g << ";" << b << "m";
-                return bg.str();
-            }
-            return "";
-        }
 
         inline std::string fg_color(const ans::IntRGB255 &colorValue)
         {
@@ -161,189 +124,101 @@ namespace tui
             return bg.str();
         }
 
-        inline std::string bold()             { return "\033[1m"; }
-        inline std::string dim()              { return "\033[2m"; }
-        inline std::string italic()           { return "\033[3m"; }
-        inline std::string underline()        { return "\033[4m"; }
-        inline std::string blink()            { return "\033[5m"; }
-        inline std::string rblink()           { return "\033[6m"; }
-        inline std::string reversed()         { return "\033[7m"; }
-        inline std::string conceal()          { return "\033[8m"; }
-        inline std::string crossed()          { return "\033[9m"; }
-        inline std::string double_underline() { return "\033[21m"; }
-        inline std::string curly_underline()  { return "\033[4:3m"; }
-        inline std::string overline()         { return "\033[53m"; }
-        inline std::string reset()            { return "\033[0m"; }
-
     }
 
-    
 
 
-#if defined(RANG_DOT_HPP) && !defined(CORNATUI_DISABLE_RANG_DOT_HPP)
 
-    inline void init_terminal()
+    namespace detail
     {
-        rang::setControlMode(rang::control::Auto);
-        rang::setWinTermMode(rang::winTerm::Auto);
-    }
-
-    inline void set_color_mode(rang::control mode = rang::control::Auto) { rang::setControlMode(mode); }
-
-    inline void set_win_term_mode(rang::winTerm mode = rang::winTerm::Auto) { rang::setWinTermMode(mode); }
-
-    inline void disable_color() { rang::setControlMode(rang::control::Off); }
-
-    inline void fg_color(const int color, std::ostream &print = std::cout)
-    {
-        static const rang::fg fg_codes[8] = {rang::fg::black, rang::fg::red, rang::fg::green, rang::fg::yellow, rang::fg::blue, rang::fg::magenta, rang::fg::cyan, rang::fg::gray};
-        static const rang::fgB fgB_codes[8] = {rang::fgB::black, rang::fgB::red, rang::fgB::green, rang::fgB::yellow, rang::fgB::blue, rang::fgB::magenta, rang::fgB::cyan, rang::fgB::gray};
-
-        if (color <= 0)
-        {
-            print << rang::fg::reset;
-        }
-        else if (color <= 8)
-        {
-            print << fg_codes[color - 1];
-        }
-        else if (color <= 16)
-        {
-            print << fgB_codes[color - 9];
-        }
-        else if (color < 256)
-        {
-            print << "\033[38;5;" << color << "m";
-        }
-    }
-
-    inline void bg_color(const int color, std::ostream &print = std::cout)
-    {
-        static const rang::bg bg_codes[8] = {rang::bg::black, rang::bg::red, rang::bg::green, rang::bg::yellow, rang::bg::blue, rang::bg::magenta, rang::bg::cyan, rang::bg::gray};
-        static const rang::bgB bgB_codes[8] = {rang::bgB::black, rang::bgB::red, rang::bgB::green, rang::bgB::yellow, rang::bgB::blue, rang::bgB::magenta, rang::bgB::cyan, rang::bgB::gray};
-
-        if (color <= 0)
-        {
-            print << rang::bg::reset;
-        }
-        else if (color <= 8)
-        {
-            print << bg_codes[color - 1];
-        }
-        else if (color <= 16)
-        {
-            print << bgB_codes[color - 9];
-        }
-        else if (color < 256)
-        {
-            print << "\033[48;5;" << color << "m";
-        }
-    }
-
-    inline void font_style(const int style, std::ostream &print = std::cout)
-    {
-        static const rang::style style_codes[9] = {
-            rang::style::bold, rang::style::dim, rang::style::italic, rang::style::underline,
-            rang::style::blink, rang::style::rblink, rang::style::reversed, rang::style::conceal, rang::style::crossed};
-
-        if (style <= 0)
-        {
-            print << rang::style::reset;
-        }
-        else if (style <= 9)
-        {
-            print << style_codes[style - 1];
-        }
-    }
-
-    inline void reset(std::ostream &print = std::cout) { print << rang::style::reset; }
-
-#else
 
 #if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
-
-    inline void init_terminal()
-    {
-
-        SetConsoleOutputCP(65001);
-        SetConsoleCP(65001);
-
-        HANDLE h_out = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (h_out != INVALID_HANDLE_VALUE)
+        struct TerminalState
         {
-            DWORD dw_mode = 0;
-            if (GetConsoleMode(h_out, &dw_mode))
-            {
-                dw_mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-                SetConsoleMode(h_out, dw_mode);
-            }
+            UINT output_cp = 0;
+            UINT input_cp = 0;
+            DWORD stdout_mode = 0;
+            DWORD stderr_mode = 0;
+            bool captured = false;
+        };
+
+        inline TerminalState &terminal_state()
+        {
+            static TerminalState state;
+            return state;
         }
-    }
-
-#else
-
-    inline void init_terminal() { /*coming soon*/ }
 
 #endif
 
-    inline void fg_color(const int color, std::ostream &print = std::cout)
-    {
-        if (color <= 0)
-        {
-            print << "\033[0m";
-        }
-        else if (color <= 16)
-        {
-            static const char *basic_colors[] = {"0", "30", "31", "32", "33", "34", "35", "36", "37", "90", "91", "92", "93", "94", "95", "96", "97"};
-            print << "\033[" << basic_colors[color] << "m";
-        }
-        else if (color < 256)
-        {
-            print << "\033[38;5;" << color << "m";
-        }
     }
 
-    inline void bg_color(const int color, std::ostream &print = std::cout)
+    inline bool init_terminal()
     {
-        if (color <= 0)
-        {
-            print << "\033[0m";
-        }
-        else if (color <= 8)
-        {
-            print << "\033[" << (39 + color) << "m";
-        }
-        else if (color <= 16)
-        {
-            print << "\033[" << (91 + color) << "m";
-        }
-        else if (color < 256)
-        {
-            print << "\033[48;5;" << color << "m";
-        }
-    }
+        bool ok = true;
 
-    inline void font_style(const int style, std::ostream &print = std::cout)
-    {
-        if (style <= 0)
-        {
-            print << "\033[0m";
-        }
-        else if (style <= 9)
-        {
-            print << "\033[" << style << "m";
-        }
-    }
+#if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
+        auto &state = detail::terminal_state();
 
-    inline void reset(std::ostream &print = std::cout) { print << "\033[0m"; }
+        if (!state.captured)
+        {
+            state.output_cp = GetConsoleOutputCP();
+            state.input_cp = GetConsoleCP();
 
+            HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+            HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
+            if (hOut != INVALID_HANDLE_VALUE)
+                GetConsoleMode(hOut, &state.stdout_mode);
+            if (hErr != INVALID_HANDLE_VALUE)
+                GetConsoleMode(hErr, &state.stderr_mode);
+
+            state.captured = true;
+        }
+
+        ok &= (SetConsoleOutputCP(65001) != 0);
+        ok &= (SetConsoleCP(65001) != 0);
+
+        auto enable_vt = [](DWORD stdHandle) -> bool
+        {
+            HANDLE h = GetStdHandle(stdHandle);
+            if (h == INVALID_HANDLE_VALUE)
+                return false;
+            DWORD mode = 0;
+            if (!GetConsoleMode(h, &mode))
+                return false;
+            mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+            return SetConsoleMode(h, mode) != 0;
+        };
+
+        ok &= enable_vt(STD_OUTPUT_HANDLE);
+        ok &= enable_vt(STD_ERROR_HANDLE);
 #endif
+
+        return ok;
+    }
+
+    inline void restore_terminal()
+    {
+#if defined(_WIN32) && !defined(CORNATUI_DISABLE_WIN32)
+        auto &state = detail::terminal_state();
+        if (!state.captured)
+            return;
+
+        SetConsoleOutputCP(state.output_cp);
+        SetConsoleCP(state.input_cp);
+
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
+        if (hOut != INVALID_HANDLE_VALUE)
+            SetConsoleMode(hOut, state.stdout_mode);
+        if (hErr != INVALID_HANDLE_VALUE)
+            SetConsoleMode(hErr, state.stderr_mode);
+#endif
+    }
+
+
 
 
 
 }
-
-
-
 
 #endif
