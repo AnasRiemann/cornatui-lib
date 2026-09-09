@@ -60,7 +60,7 @@ The core rule that governs the whole API: **anything that builds structured outp
 ## examples : colors & text effects
 |   | |
 |:---:|:---:|
-| ![colors](cornatui_test_screenshots/colors/fg_colors.png) | ![Git Bash](cornatui_test_screenshots/Text%20Effects/fonts.png) |
+| ![colors](cornatui_test_screenshots/colors/255Ansi_colors_fg_bg.png) | ![Git Bash](cornatui_test_screenshots/text_effects/text_effects.png) |
 ---
 
 ## 3) Project Structure
